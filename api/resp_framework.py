@@ -7,7 +7,7 @@
 
 import os
 import importlib
-from even.configs import DefaultConfig
+from base.configs import DefaultConfig
 
 
 class _EvenException(Exception):
