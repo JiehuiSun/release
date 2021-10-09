@@ -2,7 +2,7 @@
 # _*_ encoding: utf-8 _*_
 # Create: 2021-10-08 17:05:07
 # Author: huihui - sunjiehuimail@foxmail.com
-# Filename: base_models.py
+# Filename: models.py
 
 
 from base import db
