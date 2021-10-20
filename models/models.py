@@ -71,6 +71,7 @@ class BuildScriptModel(db.Model):
 
 class SubmitLogModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    version_num = db.Column(db.String(64), nullable=False, comment="版本号")
     title = db.Column(db.String(64), nullable=False, comment="标题")
     desc = db.Column(db.String(256), nullable=True, comment="描述")
     env = db.Column(db.String(12), nullable=False, comment="环境")
@@ -86,6 +87,7 @@ class SubmitLogModel(db.Model):
 
 class BuildLogModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    version_num = db.Column(db.String(64), nullable=False, comment="版本号")
     title = db.Column(db.String(64), nullable=False, comment="标题")
     desc = db.Column(db.String(256), nullable=True, comment="描述")
     env = db.Column(db.String(12), nullable=False, comment="环境")
