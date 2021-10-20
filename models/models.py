@@ -15,6 +15,7 @@ class GroupModel(db.Model):
     desc = db.Column(db.String(256), nullable=True, comment="简介")
     parent_id = db.Column(db.Integer, default=0, nullable=False, comment="父ID")
     email = db.Column(db.String(64), nullable=False, comment="邮箱")
+    type_id = db.Column(db.Integer, nullable=True, comment="类型: 10 后端, 20 前端, 90 其他")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
@@ -49,6 +50,7 @@ class ProjectModel(db.Model):
     ssh_url = db.Column(db.String(256), nullable=True, comment="SSL")
     http_url = db.Column(db.String(256), nullable=True, comment="HTTP")
     group_id = db.Column(db.Integer, nullable=False, comment="组ID(关联UserGroupModel)")
+    type_id = db.Column(db.Integer, nullable=True, comment="类型: 10 后端,20 前端, 90 其他")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
@@ -57,6 +59,7 @@ class ProjectModel(db.Model):
 class BuildScriptModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     env = db.Column(db.String(12), nullable=True, comment="环境(感觉用不上枚举)")
+    project_id = db.Column(db.Integer, nullable=False, comment="项目ID(关联ProjectModel)")
     script_path = db.Column(db.String(256), nullable=True, comment="脚本相对路径")
     archive_path = db.Column(db.String(256), nullable=True, comment="存档相对路径")
     script_type = db.Column(db.Integer, nullable=True, default=1, comment="脚本类型: 1 sh, 2 py")
@@ -119,6 +122,7 @@ class RequirementModel(db.Model):
     name = db.Column(db.String(64), nullable=False, comment="标题")
     desc = db.Column(db.String(256), nullable=True, comment="描述")
     status_code = db.Column(db.Integer, nullable=True, comment="状态(关联RequirementCodeModel)")
+    delayed = db.Column(db.String(256), nullable=True, comment="过程记录")
 
     # plan
     dt_plan_started = db.Column(db.DateTime, nullable=False, default=time_utils.now_dt, comment="计划启动时间")
@@ -155,6 +159,7 @@ class RequirementProjectModel(db.Model):
     requirement_status = db.Column(db.Integer, nullable=False, comment="需求状态: 1 未开始, 2 正常, 3 延期")
     dt_started = db.Column(db.DateTime, nullable=True, comment="开始时间")
     dt_finished = db.Column(db.DateTime, nullable=True, comment="完成时间")
+    comment = db.Column(db.Text, nullable=False, comment="备注")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)

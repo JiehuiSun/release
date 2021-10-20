@@ -16,7 +16,7 @@ from .resp_framework import Resp
 
 
 class Api(VerParams, Resp, View):
-    NEED_LOGIN = True
+    NEED_LOGIN = False
 
     def __init__(self):
         self.__name__ = self.__class__.__name__
@@ -70,7 +70,7 @@ class Api(VerParams, Resp, View):
         try:
             self._handle_params()
             self.__dispatch()
-            method = getattr(self, request.method.lower(), None)
+            method = getattr(self, self.call_method, None)
             if not method:
                 raise errors.MethodError
             self._pre_handle()
