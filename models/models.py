@@ -21,7 +21,7 @@ class GroupModel(db.Model):
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
 
 
-class UserModel(db.Model):
+class DevUserModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False, comment="用户名")
     job = db.Column(db.String(64), nullable=False, comment="工作")
@@ -80,7 +80,7 @@ class SubmitLogModel(db.Model):
     branch = db.Column(db.String(128), nullable=False, comment="分支")
     commit_hash = db.Column(db.String(128), nullable=True, comment="记录当时的最后commit号")
     status = db.Column(db.Integer, nullable=True, default=0, comment="状态: 0 未开始, 1 操作中, 2 成功, 3 失败")
-    creator = db.Column(db.Integer, nullable=False, comment="创建人ID(关联UserModel)")
+    creator = db.Column(db.Integer, nullable=False, comment="创建人ID(关联DevUserModel)")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
@@ -96,9 +96,9 @@ class BuildLogModel(db.Model):
     branch = db.Column(db.String(128), nullable=False, comment="分支")
     commit_hash = db.Column(db.String(128), nullable=True, comment="记录当时的最后commit号")
     status = db.Column(db.Integer, nullable=True, default=0, comment="状态: 0 未开始, 1 操作中, 2 成功, 3 失败")
-    creator = db.Column(db.Integer, nullable=False, comment="创建人ID(关联UserModel)")
+    creator = db.Column(db.Integer, nullable=False, comment="创建人ID(关联DevUserModel)")
     build_type = db.Column(db.Integer, nullable=False, comment="类型: 1 手动, 2 自动")
-    submit_id = db.Column(db.Integer, nullable=True, comment="提交ID(关联UserModel)")
+    submit_id = db.Column(db.Integer, nullable=True, comment="提交ID(关联DevUserModel)")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
