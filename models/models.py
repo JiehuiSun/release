@@ -37,6 +37,7 @@ class UserGroupModel(db.Model):
     """
     用第3张表做多对多的关联, 既然后续都以组为纬度, 那肯定会有一个人多个组的可能
     """
+    id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, nullable=False, comment="用户ID")
     group_id = db.Column(db.Integer, nullable=False, comment="组ID")
     is_deleted = db.Column(db.Boolean, default=False)
