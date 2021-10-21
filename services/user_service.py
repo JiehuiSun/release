@@ -14,7 +14,7 @@ class Group():
     组
     """
     @classmethod
-    def add_group(cls, name, desc=None, parent_id=None, email=None):
+    def add_group(cls, name, desc=None, parent_id=None, email=None, type_id=None):
         """
         新增组
         """
@@ -28,6 +28,8 @@ class Group():
             group_dict["parent_id"] = parent_id
         if email:
             group_dict["email"] = email
+        if type_id:
+            group_dict["type_id"] = type_id
 
         group = GroupModel(**group_dict)
 
