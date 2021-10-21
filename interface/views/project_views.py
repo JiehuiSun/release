@@ -7,6 +7,8 @@
 
 from api import Api
 
+from services.project_service import Project
+
 
 class ProjectView(Api):
     """
@@ -20,17 +22,7 @@ class ProjectView(Api):
 
         self.ver_params()
 
-        project_list = list()
-
-        for i in range(2):
-            project_dict = {
-                "id": i + 1,
-                "name": f"项目{i + 1}",
-                "desc": f"项目{i + 1}的简介",
-                "dt_last_submit": "2021-10-10 12:12:12",    # 实事获取
-                # "dt_last_build": "2021-10-10 12:12:12",
-            }
-            project_list.append(project_dict)
+        project_list = Project.list_project(**self.data)
 
         ret = {
             "data_list": project_list
@@ -44,21 +36,29 @@ class ProjectView(Api):
 
         self.ver_params()
 
-        project_dict = {
-            "id": self.key,
-            "name": "项目名name",
-            "desc": "简介desc",
-            "ssh_url": "ssl://asdfasdf.com/asdfasdf",
-            "http_url": "http://asdfasdf.com/asdfasdf",
-            "script": {
-                "test": "big-text",
-                "pro": "big-text"
-            },
-            "archive_path": "./hui/test",
-            "script_type": {
-                "id": 1,
-                "value": "py"
-            },
-        }
+        project_dict = Project.query_project(self.key)
 
         return self.ret(data=project_dict)
+
+    def post(self):
+        self.params_dict = {
+            "name": "required str",
+            "desc": "optional str",
+            "ssh_url": "optional str",
+            "http_url": "required str",
+            "group_id": "optional int",
+            "type_id": "optional int",
+            "script": "optional pass",
+            "script_type": "optional int",
+            "archive_path": "optional str",
+            "script_path": "optional str",
+        }
+
+        self.ver_params()
+
+        try:
+            Project.add_project(**self.data)
+        except Exception as e:
+            return self.ret(errcode=100000, errmsg=str(e))
+
+        return self.ret()
