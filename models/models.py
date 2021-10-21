@@ -5,8 +5,17 @@
 # Filename: models.py
 
 
+import datetime
+
 from base import db
 from utils import time_utils
+
+
+WORK_TYPE = (
+    (10, "后端"),
+    (20, "前端"),
+    (90, "其他"),
+)
 
 
 class GroupModel(db.Model):
@@ -19,6 +28,24 @@ class GroupModel(db.Model):
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
+
+    def to_dict(self):
+        ret_dict = {}
+        for k in self.__table__.columns:
+            value = getattr(self, k.name)
+            if isinstance(value, datetime.datetime):
+                value = value.strftime('%Y-%m-%d %H:%M:%S')
+            elif k.name == "type_id":
+                if not value:
+                    ret_dict["type"] = dict()
+                    continue
+                type_dict = {
+                    "id": value,
+                    "name": dict(WORK_TYPE)[value]
+                }
+                ret_dict["type"] = type_dict
+            ret_dict[k.name] = value
+        return ret_dict
 
 
 class DevUserModel(db.Model):

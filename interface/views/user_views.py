@@ -7,6 +7,8 @@
 
 from api import Api
 
+from services.user_service import Group
+
 
 class GroupView(Api):
     """
@@ -22,28 +24,23 @@ class GroupView(Api):
 
         self.ver_params()
 
+        try:
+            Group.add_group(**self.data)
+        except Exception as e:
+            return self.ret(errcode=10000, errmsg=str(e))
+
         return self.ret()
 
     def list(self):
         self.params_dict = {
             "type_id": "optional str",
             "keyword": "optional str",
+            "parent_id": "optional str",
         }
 
         self.ver_params()
 
-        group_list = list()
-
-        for i in range(2):
-            group_dict = {
-                "id": i + 1,
-                "name": f"组{i + 1}",
-                "type": {
-                    "id": 10,
-                    "name": "后端组"
-                }
-            }
-            group_list.append(group_dict)
+        group_list = Group.list_group(**self.data)
 
         ret = {
             "data_list": group_list
