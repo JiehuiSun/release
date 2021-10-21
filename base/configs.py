@@ -25,6 +25,8 @@ class DefaultConfig(object):
 
     MODULES = (
         "account",
+        "interface",
+        "model",
     )
 
 # local_configs目的: 因为线上、测试、开发环境的配置不同，
