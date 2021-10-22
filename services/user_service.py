@@ -39,7 +39,8 @@ class Group():
         return
 
     @classmethod
-    def list_group(cls, type_id=None, keyword=None, parent_id=None):
+    def list_group(cls, type_id=None, keyword=None, parent_id=None,
+                   group_id_list=None):
         """
         组列表
         """
@@ -52,10 +53,18 @@ class Group():
         if parent_id:
             group_obj_list = group_obj_list.filter_by(parent_id=parent_id)
 
+        if group_id_list:
+            group_obj_list = group_obj_list.filter(GroupModel.id.in_(group_id_list))
+
+        count = group_obj_list.count()
         group_obj_list = group_obj_list.all()
 
         group_list = list()
         for i in group_obj_list:
             group_list.append(i.to_dict())
 
-        return group_list
+        ret = {
+            "data_list": group_list,
+            "count": count
+        }
+        return ret

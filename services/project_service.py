@@ -76,13 +76,18 @@ class Project():
         if group_id:
             project_obj_list = project_obj_list.filter_by(group_id=group_id)
 
+        count = project_obj_list.count()
         project_obj_list = project_obj_list.all()
 
         project_list = list()
         for i in project_obj_list:
             project_list.append(i.to_dict())
 
-        return project_list
+        ret = {
+            "data_list": project_list,
+            "count": count
+        }
+        return ret
 
     @classmethod
     def query_project(cls, project_id):

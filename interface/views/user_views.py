@@ -40,10 +40,11 @@ class GroupView(Api):
 
         self.ver_params()
 
-        group_list = Group.list_group(**self.data)
+        group_data = Group.list_group(**self.data)
 
         ret = {
-            "data_list": group_list
+            "data_list": group_data["data_list"],
+            "count": group_data["count"]
         }
 
         return self.ret(data=ret)

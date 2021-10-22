@@ -22,10 +22,11 @@ class ProjectView(Api):
 
         self.ver_params()
 
-        project_list = Project.list_project(**self.data)
+        project_data = Project.list_project(**self.data)
 
         ret = {
-            "data_list": project_list
+            "data_list": project_data["data_list"],
+            "count": project_data["count"]
         }
 
         return self.ret(data=ret)
