@@ -6,7 +6,7 @@
 
 
 from base import db
-from models.models import DevUserModel, GroupModel
+from models.models import DevUserModel, GroupModel, UserGroupModel
 
 
 class Group():
@@ -67,4 +67,38 @@ class Group():
             "data_list": group_list,
             "count": count
         }
+        return ret
+
+
+class User():
+    """
+    用户
+    """
+    @classmethod
+    def list_user(cls, keyword=None, user_id_list: list = [], group_id=None):
+        user_obj_list = DevUserModel.query.filter_by(is_deleted=False)
+
+        if keyword:
+            user_obj_list = user_obj_list.filter(DevUserModel.name.like(f"%{keyword}%"))
+
+        if group_id:
+            user_group_obj_list = UserGroupModel.query.filter_by(is_deleted=False,
+                                                                 group_id=group_id).all()
+            user_id_list = [i.user_id for i in user_group_obj_list]
+
+        if user_id_list:
+            user_obj_list = user_obj_list.filter(DevUserModel.id.in_(user_id_list))
+
+        count = user_obj_list.count()
+        user_obj_list = user_obj_list.all()
+
+        user_list = list()
+        for i in user_obj_list:
+            user_list.append(i.to_dict())
+
+        ret = {
+            "data_list": user_list,
+            "count": count
+        }
+
         return ret

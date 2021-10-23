@@ -9,7 +9,7 @@ from api import Api
 from base.errors import ParamsError
 
 from services.requirement_service import Requirement, RequirementGroup
-from services.user_service import Group
+from services.user_service import Group, User
 
 
 class RequirementViews(Api):
@@ -95,21 +95,19 @@ class RequirementGroupViews(Api):
 
         self.ver_params()
 
-        group_list = list()
+        group_list = RequirementGroup.list_group(**self.data)
 
-        for i in range(2):
-            group_dict = {
-                "id": i + 1,
-                "name": f"需求{i + 1}",
-                "project_id": 1,
-                "branch": "分支",
-                "user_list": [
-                    {"id": 1, "name": "User1"},
-                    {"id": 2, "name": "User2"},
-                ],
-                "comment": "备注"
-            }
-            group_list.append(group_dict)
+        group_id_list = [i["group_id"] for i in group_list]
+
+        group_data = Group.list_group(group_id_list=group_id_list)
+
+        group_dict_list = dict()
+        for i in group_data["data_list"]:
+            group_dict_list[i["id"]] = i["name"]
+
+        for i in group_list:
+            i["group_name"] = group_dict_list.get(i["group_id"])
+            i["user_list"] = User.list_user(group_id=i["group_id"])["data_list"]
 
         ret = {
             "data_list": group_list
