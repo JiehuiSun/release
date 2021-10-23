@@ -40,11 +40,11 @@ class Group():
 
     @classmethod
     def list_group(cls, type_id=None, keyword=None, parent_id=None,
-                   group_id_list=None):
+                   group_id_list: list = []):
         """
         组列表
         """
-        group_obj_list = GroupModel.query
+        group_obj_list = GroupModel.query.filter_by(is_deleted=False)
         if type_id:
             group_obj_list = group_obj_list.filter_by(type_id=type_id)
         if keyword:

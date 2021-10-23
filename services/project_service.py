@@ -6,6 +6,7 @@
 
 
 from base import db
+from base.errors import ParamsError
 from models.models import ProjectModel, BuildScriptModel, SCRIPT_TYPE
 
 
@@ -68,7 +69,7 @@ class Project():
         """
         项目列表
         """
-        project_obj_list = ProjectModel.query
+        project_obj_list = ProjectModel.query.filter_by(is_deleted=False)
         if type_id:
             project_obj_list = project_obj_list.filter_by(type_id=type_id)
         if keyword:
@@ -93,13 +94,14 @@ class Project():
     def query_project(cls, project_id):
         project_obj = ProjectModel.query.get(project_id)
 
-        if not project_obj:
-            return
+        if not project_obj or not project_obj.is_deleted:
+            raise ParamsError("Requirement Not Exist or Use Delete")
 
         project_dict = project_obj.to_dict()
 
         build_script_obj_list = BuildScriptModel.query \
-            .filter_by(project_id=project_id).all()
+            .filter_by(project_id=project_id,
+                       is_deleted=False).all()
         if not build_script_obj_list:
             project_dict["script"] = dict()
             project_dict["script_type"] = dict()

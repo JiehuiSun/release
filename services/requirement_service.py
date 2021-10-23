@@ -59,7 +59,7 @@ class Requirement():
 
         TODO type_id应该分几个层级，根据不同层级筛选不同节点的时间, 目前先用固定值做配置与筛选
         """
-        requirement_obj_list = RequirementModel.query
+        requirement_obj_list = RequirementModel.query.filter_by(is_deleted=False)
         if status_id:
             status_obj = RequirementCodeModel.query.filter_by(code=status_id).one_or_none()
             if not status_obj:
@@ -90,6 +90,8 @@ class Requirement():
     def query_requirement(cls, requirement_id):
         try:
             requirement_obj = RequirementModel.query.get(requirement_id)
+            if not requirement_obj.is_deleted:
+                raise ParamsError("Requirement Not Exist or Use Delete")
         except Exception as e:
             raise ParamsError("Requirement Not Exist or Use Delete")
 
@@ -137,7 +139,8 @@ class RequirementGroup():
         """
         获取需求组的列表
         """
-        group_obj_list = RequirementProjectModel.query.filter_by(requirement_id=requirement_id)
+        group_obj_list = RequirementProjectModel.query.filter_by(requirement_id=requirement_id,
+                                                                 is_deleted=False)
 
         if type_id:
             group_obj_list = group_obj_list.filter_by(type_id=type_id)
