@@ -74,3 +74,15 @@ class BuildLogView(Api):
         }
 
         return self.ret(data=ret)
+
+    def post(self):
+        self.params_dict = {
+            "project_id": "required int",
+            "branch": "required str",
+            "env_id": "required int",
+            "commit_id": "optional str"
+        }
+
+        self.ver_params()
+
+        return self.ret()
