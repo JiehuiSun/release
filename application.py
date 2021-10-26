@@ -43,8 +43,8 @@ def config_blueprint(app):
 
 
 def config_logger(app):
-    log_dir = './var/log/'
-    log_filename = 'flask.log'
+    log_dir = '../logs/'
+    log_filename = 'redbullLog.log'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
     config_dict = {
