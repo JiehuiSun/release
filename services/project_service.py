@@ -108,6 +108,7 @@ class Project():
             project_dict["archive_path"] = ""
         else:
             for i in build_script_obj_list:
+                project_dict["script"] = dict()
                 project_dict["script"][i.env] = i.execute_comm
                 project_dict["script_type"] = {
                     "id": i.script_type,
