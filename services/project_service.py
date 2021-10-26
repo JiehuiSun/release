@@ -107,8 +107,8 @@ class Project():
             project_dict["script_type"] = dict()
             project_dict["archive_path"] = ""
         else:
+            project_dict["script"] = dict()
             for i in build_script_obj_list:
-                project_dict["script"] = dict()
                 project_dict["script"][i.env] = i.execute_comm
                 project_dict["script_type"] = {
                     "id": i.script_type,
@@ -153,9 +153,12 @@ class Project():
                     if script_obj:
                         # 已存在的环境配置
                         script_obj.execute_comm = v
-                        script_obj.script_type = script_type
-                        script_obj.script_path = script_path
-                        script_obj.archive_path = archive_path
+                        if script_type:
+                            script_obj.script_type = script_type
+                        if script_path:
+                            script_obj.script_path = script_path
+                        if archive_path:
+                            script_obj.archive_path = archive_path
                     else:
                         # 不存在的环境配置
                         tmp_dict = {
