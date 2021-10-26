@@ -116,3 +116,61 @@ class Project():
                 project_dict["archive_path"] = i.archive_path
 
         return project_dict
+
+    @classmethod
+    def update_project(cls, id, name=None, http_url=None, desc=None,
+                       ssh_url=None, group_id=None, type_id=None, script=None,
+                       script_type=None, archive_path=None, script_path=None):
+        """
+        更新项目
+        """
+        project_obj = ProjectModel.query.get(id)
+
+        if not project_obj:
+            raise ParamsError("Update Err! Project Not Exist or Use Delete")
+
+        if name:
+            project_obj.name = name
+        if http_url:
+            project_obj.http_url = http_url
+        if desc:
+            project_obj.desc = desc
+        if ssh_url:
+            project_obj.ssh_url = ssh_url
+        if group_id:
+            project_obj.group_id = group_id
+        if type_id:
+            project_obj.type_id = type_id
+
+        if script:
+            try:
+                for k, v in script.items():
+                    script_obj = BuildScriptModel.query.filter_by(project_id=id,
+                                                                  is_deleted=False,
+                                                                  env=k).one_or_none()
+
+                    if script_obj:
+                        # 已存在的环境配置
+                        script_obj.execute_comm = v
+                        script_obj.script_type = script_type
+                        script_obj.script_path = script_path
+                        script_obj.archive_path = archive_path
+                    else:
+                        # 不存在的环境配置
+                        tmp_dict = {
+                            "env": k,
+                            "project_id": id,
+                            "execute_comm": v,
+                            "script_type": script_type,
+                            "script_path": script_path,
+                            "archive_path": archive_path,
+                        }
+                        tmp = BuildScriptModel(**tmp_dict)
+                        db.session.add(tmp)
+                    db.session.flush()
+            except Exception as e:
+                db.session.rollback()
+                raise str(e)
+        db.session.commit()
+
+        return

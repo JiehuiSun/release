@@ -63,3 +63,27 @@ class ProjectView(Api):
             return self.ret(errcode=100000, errmsg=str(e))
 
         return self.ret()
+
+    def put(self):
+        self.params_dict = {
+            "id": "required int",
+            "name": "required str",
+            "desc": "optional str",
+            "ssh_url": "optional str",
+            "http_url": "required str",
+            "group_id": "optional int",
+            "type_id": "optional int",
+            "script": "optional pass",
+            "script_type": "optional int",
+            "archive_path": "optional str",
+            "script_path": "optional str",
+        }
+
+        self.ver_params()
+
+        try:
+            Project.update_project(**self.data)
+        except Exception as e:
+            return self.ret(errcode=100000, errmsg=str(e))
+
+        return self.ret()
