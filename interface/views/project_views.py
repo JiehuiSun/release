@@ -67,10 +67,10 @@ class ProjectView(Api):
     def put(self):
         self.params_dict = {
             "id": "required int",
-            "name": "required str",
+            "name": "optional str",
             "desc": "optional str",
             "ssh_url": "optional str",
-            "http_url": "required str",
+            "http_url": "optional str",
             "group_id": "optional int",
             "type_id": "optional int",
             "script": "optional pass",
