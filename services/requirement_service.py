@@ -90,7 +90,7 @@ class Requirement():
     def query_requirement(cls, requirement_id):
         try:
             requirement_obj = RequirementModel.query.get(requirement_id)
-            if not requirement_obj.is_deleted:
+            if requirement_obj.is_deleted:
                 raise ParamsError("Requirement Not Exist or Use Delete")
         except Exception as e:
             raise ParamsError("Requirement Not Exist or Use Delete")

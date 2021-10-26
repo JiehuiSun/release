@@ -94,8 +94,8 @@ class Project():
     def query_project(cls, project_id):
         project_obj = ProjectModel.query.get(project_id)
 
-        if not project_obj or not project_obj.is_deleted:
-            raise ParamsError("Requirement Not Exist or Use Delete")
+        if not project_obj or project_obj.is_deleted:
+            raise ParamsError("Project Not Exist or Use Delete")
 
         project_dict = project_obj.to_dict()
 
