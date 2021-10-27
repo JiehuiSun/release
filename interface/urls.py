@@ -5,7 +5,7 @@
 # Filename: urls.py
 
 
-from .views.user_views import GroupView
+from .views.user_views import GroupView, UserView
 from .views.project_views import ProjectView
 from .views.requirement_views import RequirementViews, RequirementGroupViews
 from .views.submit_views import SubmitProjectView, SubmitLogView
@@ -19,8 +19,9 @@ urls = ()
 routing_dict = dict()
 v1_routing_dict = dict()
 
-# group
+# user
 v1_routing_dict["group"] = GroupView
+v1_routing_dict["user"] = UserView
 
 # project
 v1_routing_dict["project"] = ProjectView

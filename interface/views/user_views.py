@@ -7,7 +7,7 @@
 
 from api import Api
 
-from services.user_service import Group
+from services.user_service import Group, User
 
 
 class GroupView(Api):
@@ -45,6 +45,29 @@ class GroupView(Api):
         ret = {
             "data_list": group_data["data_list"],
             "count": group_data["count"]
+        }
+
+        return self.ret(data=ret)
+
+
+class UserView(Api):
+    """
+    用户
+    """
+    def list(self):
+        self.params_dict = {
+            "type_id": "optional str",
+            "keyword": "optional str",
+            "group_id": "optional str",
+        }
+
+        self.ver_params()
+
+        user_data = User.list_user(**self.data)
+
+        ret = {
+            "data_list": user_data["data_list"],
+            "count": user_data["count"]
         }
 
         return self.ret(data=ret)

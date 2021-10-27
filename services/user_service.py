@@ -75,7 +75,7 @@ class User():
     用户
     """
     @classmethod
-    def list_user(cls, keyword=None, user_id_list: list = [], group_id=None):
+    def list_user(cls, keyword=None, user_id_list: list = [], group_id=None, type_id=None):
         user_obj_list = DevUserModel.query.filter_by(is_deleted=False)
 
         if keyword:
