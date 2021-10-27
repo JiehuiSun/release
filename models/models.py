@@ -282,6 +282,7 @@ class RequirementProjectModel(db.Model):
                                    comment="需求状态: 1 未开始, 2 正常, 3 延期")
     dt_started = db.Column(db.DateTime, nullable=True, comment="开始时间")
     dt_finished = db.Column(db.DateTime, nullable=True, comment="完成时间")
+    is_auto_deploy = db.Column(db.Boolean, default=False, comment="是否自动部署")
     comment = db.Column(db.Text, nullable=False, comment="备注")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)

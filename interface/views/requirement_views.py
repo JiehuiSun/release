@@ -130,7 +130,8 @@ class RequirementGroupViews(Api):
             "group_id": "required int",
             "branch": "required str",
             "comment": "optional str",
-            "user_id_list": "optional list"
+            "user_id_list": "optional list",
+            "is_auto_deploy": "optional pass"
         }
 
         d = self.data
