@@ -122,7 +122,8 @@ class RequirementGroup():
                     "project_id": i["project_id"],
                     "group_id": i["group_id"],
                     "branch": i["branch"],
-                    "comment": i["comment"]
+                    "comment": i["comment"],
+                    "user_ids": i["user_ids"]
                 }
                 r_g = RequirementProjectModel(**d)
                 db.session.add(r_g)

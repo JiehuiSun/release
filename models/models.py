@@ -273,6 +273,7 @@ class RequirementProjectModel(db.Model):
     requirement_id = db.Column(db.Integer, nullable=False, comment="需求ID(关联RequirementModel)")
     project_id = db.Column(db.Integer, nullable=False, comment="项目ID(关联ProjectModel)")
     group_id = db.Column(db.Integer, nullable=True, comment="组ID(关联GroupModel)")    # 可为空, 前期可以不使用
+    user_ids = db.Column(db.String(128), nullable=False, comment="用户ID(应该做外建方便后期扩展)")
     type_id = db.Column(db.Integer, nullable=False, comment="类型ID(关联WORK_TYPE)")
     branch = db.Column(db.String(128), nullable=False, comment="分支")
     progress_status = db.Column(db.Integer, nullable=False, default=1,

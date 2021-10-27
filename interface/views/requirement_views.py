@@ -107,7 +107,8 @@ class RequirementGroupViews(Api):
 
         for i in group_list:
             i["group_name"] = group_dict_list.get(i["group_id"])
-            i["user_list"] = User.list_user(group_id=i["group_id"])["data_list"]
+            user_id_list = i["user_ids"].split(",")
+            i["user_list"] = User.list_user(user_id_list=user_id_list)
 
         ret = {
             "data_list": group_list
@@ -128,7 +129,8 @@ class RequirementGroupViews(Api):
             "project_id": "required int",
             "group_id": "required int",
             "branch": "required str",
-            "comment": "optional str"
+            "comment": "optional str",
+            "user_ids": "optional str"
         }
 
         d = self.data
