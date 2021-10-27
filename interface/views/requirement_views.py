@@ -116,7 +116,7 @@ class RequirementGroupViews(Api):
 
         return self.ret(data=ret)
 
-    def post(self):
+    def put(self):
         self.params_dict = {
             "requirement_id": "required int",
             "type_id": "required int",
@@ -130,7 +130,7 @@ class RequirementGroupViews(Api):
             "group_id": "required int",
             "branch": "required str",
             "comment": "optional str",
-            "user_ids": "optional str"
+            "user_id_list": "optional list"
         }
 
         d = self.data
