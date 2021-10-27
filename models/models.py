@@ -110,6 +110,8 @@ class ProjectModel(db.Model):
     http_url = db.Column(db.String(256), nullable=True, comment="HTTP")
     group_id = db.Column(db.Integer, nullable=False, comment="组ID(关联UserGroupModel)")
     type_id = db.Column(db.Integer, nullable=True, comment="类型: 10 后端,20 前端, 90 其他")
+    source_id = db.Column(db.Integer, nullable=True, default=1, comment="来源: 1 gitlab")
+    source_project_id = db.Column(db.Integer, nullable=True, comment="来源的项目ID")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)

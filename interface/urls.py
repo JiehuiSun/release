@@ -10,6 +10,7 @@ from .views.project_views import ProjectView
 from .views.requirement_views import RequirementViews, RequirementGroupViews
 from .views.submit_views import SubmitProjectView, SubmitLogView
 from .views.build_views import BuildProjectView, BuildLogView
+from .views.gitlab_views import BranchView
 
 
 MODEL_NAME = "interface"
@@ -37,6 +38,9 @@ v1_routing_dict["submit_log"] = SubmitLogView
 # build
 v1_routing_dict["build_project"] = BuildProjectView
 v1_routing_dict["build_log"] = BuildLogView
+
+# gitlab
+v1_routing_dict["gitlab/branch"] = BranchView
 
 
 for k, v in v1_routing_dict.items():
