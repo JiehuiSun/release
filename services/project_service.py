@@ -91,13 +91,16 @@ class Project():
         return ret
 
     @classmethod
-    def query_project(cls, project_id):
+    def query_project(cls, project_id, need_detail=True):
         project_obj = ProjectModel.query.get(project_id)
 
         if not project_obj or project_obj.is_deleted:
             raise ParamsError("Project Not Exist or Use Delete")
 
         project_dict = project_obj.to_dict()
+
+        if not need_detail:
+            return project_dict
 
         build_script_obj_list = BuildScriptModel.query \
             .filter_by(project_id=project_id,
