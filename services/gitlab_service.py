@@ -5,7 +5,9 @@
 # Filename: gitlab_service.py
 
 
+import os
 import gitlab
+import shutil
 from flask import current_app
 
 from base.errors import InvalidArgsError
@@ -82,3 +84,36 @@ class GitLab():
             Project.add_project(**project_dict_list[i])
 
         return
+
+    @classmethod
+    def clone_project(cls, name, tar_file_name, project_id, branch="master"):
+        """
+        同步项目，如果开通其他来源的项目，需以source_id区分处理
+        """
+        repository_dir = current_app.config["REPOSITORY_DIR"]
+        pro_dir = f"{repository_dir}/{name}"
+        if not os.path.exists(pro_dir):
+            os.mkdir(pro_dir)
+
+        tmp_dir = f"{pro_dir}/{name}"
+        if os.path.exists(tmp_dir):
+            shutil.rmtree(tmp_dir)
+
+        try:
+            project = cls.gitlab().projects.get(project_id)
+            tgz = project.repository_archive(branch)
+        except Exception as e:
+            raise InvalidArgsError(f"Clone Err! {str(e)}")
+
+        tar_file_path = f"{pro_dir}/{tar_file_name}.tar.gz"
+        with open(tar_file_path, "wb") as t:
+            t.write(tgz)
+
+        if os.path.exists(tmp_dir):
+            shutil.rmtree(tmp_dir)
+
+        ret = {
+            "file_name": tar_file_name,
+            "path": tar_file_path.replace(f"{repository_dir}/", "")
+        }
+        return ret

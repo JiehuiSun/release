@@ -5,11 +5,15 @@
 # Filename: services/build_service.py
 
 
+import time
+import datetime
+
 from base import db
 from base.errors import ParamsError
 from models.models import BuildLogModel
 from .project_service import Project
 from .user_service import User
+from .gitlab_service import GitLab
 
 
 class Build():
@@ -116,3 +120,52 @@ class Build():
             "count": project_data["count"]
         }
         return ret
+
+
+class BuildLog():
+    """
+    制品日志
+    """
+    @classmethod
+    def list_build_log(cls, keyword=None, user_id=None, type_id=None,
+                   group_id=None, env_id=None):
+        pass
+
+    @classmethod
+    def add_build_log(cls, project_id, branch, env, commit_id=None):
+        project_dict = Project.query_project(project_id, False)
+
+        source_project_id = project_dict["source_project_id"]
+        http_url = project_dict["http_url"]
+        name = project_dict["name"]
+
+        name = name.replace(" ", "_")
+        tar_file_name = f"{name}_{str(datetime.datetime.now()).split()[0]}_{str(int(time.time()))[5:]}"
+
+        build_log_dict = {
+            "version_num": tar_file_name,
+            "title": f"{name} Build",
+            "env": env,
+            "project_id": project_id,
+            "branch": branch,
+            "commit_hash": commit_id,
+            "status": 1, # TODO
+            "creator": 0, # TODO
+            "build_type": 1
+        }
+        build_obj = BuildLogModel(**build_log_dict)
+        db.session.add(build_obj)
+        db.session.commit()
+
+        try:
+            tar_file_dict = GitLab.clone_project(name, tar_file_name, source_project_id, branch)
+        except Exception as e:
+            build_obj.status = 3
+            db.session.commit()
+            raise ParamsError(f"Build Err! Clone Err {str(e)}")
+
+        build_obj.status = 2
+        build_obj.file_path = tar_file_dict["path"]
+        db.session.commit()
+
+        return
