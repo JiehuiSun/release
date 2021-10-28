@@ -34,3 +34,16 @@ class BranchView(Api):
         }
 
         return self.ret(data=ret)
+
+
+class SyncProjectView(Api):
+    """
+    同步项目
+    """
+    def list(self):
+
+        try:
+            GitLab.sync_project()
+        except Exception as e:
+            return self.ret(errcode=100000, errmsg=f"{str(e)}")
+        return self.ret()

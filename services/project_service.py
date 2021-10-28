@@ -17,7 +17,8 @@ class Project():
     @classmethod
     def add_project(cls, name, http_url, desc=None, ssh_url=None,
                     group_id=None, type_id=None, script=None,
-                    script_type=None, archive_path=None, script_path=None):
+                    script_type=None, archive_path=None, script_path=None,
+                    source_project_id=None):
         """
         新增项目(正常不对外)
         """
@@ -30,10 +31,12 @@ class Project():
             project_dict["desc"] = desc
         if ssh_url:
             project_dict["ssh_url"] = ssh_url
-        if group_id:
+        if group_id is not None:
             project_dict["group_id"] = group_id
         if type_id:
             project_dict["type_id"] = type_id
+        if source_project_id:
+            project_dict["source_project_id"] = source_project_id
 
         project = ProjectModel(**project_dict)
 

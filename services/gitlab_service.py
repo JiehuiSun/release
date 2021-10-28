@@ -9,6 +9,7 @@ import gitlab
 from flask import current_app
 
 from base.errors import InvalidArgsError
+from services.project_service import Project
 
 
 
@@ -49,3 +50,35 @@ class GitLab():
         ret_list = sorted(ret_list, key=lambda x: (x["dt_last"]), reverse=True)
 
         return ret_list
+
+    @classmethod
+    def sync_project(cls):
+        """
+        同步项目，如果开通其他来源的项目，需以source_id区分处理
+        """
+        try:
+            projects = cls.gitlab().projects.list(all=True)
+        except Exception as e:
+            raise InvalidArgsError(f"Sync Project Err! GitLab Config Err. {str(e)}")
+
+        project_dict_list = dict()
+        for i in projects:
+            project_dict = dict()
+            project_dict["source_project_id"] = i.id
+            project_dict["name"] = i.name
+            project_dict["desc"] = i.description
+            project_dict["http_url"] = i.http_url_to_repo
+            project_dict["ssh_url"] = i.ssh_url_to_repo
+            project_dict["group_id"] = 0
+            project_dict_list[i.id] = project_dict
+
+        project_data = Project.list_project()
+        exist_project_id_list = list()
+        for i in project_data["data_list"]:
+            exist_project_id_list.append(i["source_project_id"])
+
+        need_project_id_list = list(set(list(project_dict_list.keys())) - set(exist_project_id_list))
+        for i in need_project_id_list:
+            Project.add_project(**project_dict_list[i])
+
+        return
