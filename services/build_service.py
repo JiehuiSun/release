@@ -22,7 +22,7 @@ class Build():
     """
     @classmethod
     def list_build(cls, keyword=None, user_id=None, type_id=None,
-                   group_id=None, env_id=None):
+                   group_id=None, env=None):
         """
         制品库列表
 
@@ -57,9 +57,9 @@ class Build():
 
         if user_id:
             build_obj_list = build_obj_list.filter_by(creator=user_id)
-        if env_id:
+        if env:
             # TODO 库里直接使用环境名还是使用枚举?
-            build_obj_list = build_obj_list.filter_by(env=env_id)
+            build_obj_list = build_obj_list.filter_by(env=env)
 
         # TODO 正常只取以project_id分组的最新一条即可
         build_obj_list = build_obj_list.all()

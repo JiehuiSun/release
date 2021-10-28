@@ -18,7 +18,7 @@ class BuildProjectView(Api):
         self.params_dict = {
             "type_id": "optional str",
             "group_id": "optional str",
-            "env_id": "optional str",
+            "env": "optional str",
         }
 
         self.ver_params()
@@ -42,7 +42,7 @@ class BuildLogView(Api):
         self.params_dict = {
             "project_id": "required str",
             "status_id": "optional str",
-            "env_id": "optional str",
+            "env": "optional str",
         }
 
         self.ver_params()
