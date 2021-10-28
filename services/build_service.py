@@ -127,9 +127,32 @@ class BuildLog():
     制品日志
     """
     @classmethod
-    def list_build_log(cls, keyword=None, user_id=None, type_id=None,
-                   group_id=None, env_id=None):
-        pass
+    def list_build_log(cls, project_id, status_id=None, env=None):
+        log_obj_list = BuildLogModel.query.filter_by(project_id=project_id,
+                                                     is_deleted=False)
+        if status_id:
+            log_obj_list = log_obj_list.filter_by(status=status_id)
+        if env:
+            log_obj_list = log_obj_list.filter_by(env=env)
+
+        count = log_obj_list.count()
+        log_obj_list = log_obj_list.all()
+
+        log_list = list()
+        for i in log_obj_list:
+            log_dict = i.to_dict()
+            log_dict["operator"] = {
+                "id": 1,
+                "name": "狗子"
+            }
+            log_list.append(log_dict)
+
+        ret = {
+            "data_list": log_list,
+            "count": count
+        }
+
+        return ret
 
     @classmethod
     def add_build_log(cls, project_id, branch, env, commit_id=None):

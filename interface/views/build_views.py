@@ -47,30 +47,11 @@ class BuildLogView(Api):
 
         self.ver_params()
 
-        build_list = list()
-
-        for i in range(2):
-            build_dict = {
-                "id": i + 1,
-                "title": f"日志标题{i + 1}",
-                "desc": f"日志{i + 1}的简介",
-                "env": "test",
-                "version_num": "版本号",
-                "duration": 60,    # 上一次耗时(s)
-                "commit": "commit信息",
-                "status": {
-                    "code": 1,
-                    "value": "成功"
-                },
-                "operator": {
-                    "id": 1,
-                    "name": "狗子"
-                }
-            }
-            build_list.append(build_dict)
+        build_data = BuildLog.list_build_log(**self.data)
 
         ret = {
-            "data_list": build_list
+            "data_list": build_data["data_list"],
+            "count": build_data["count"]
         }
 
         return self.ret(data=ret)
