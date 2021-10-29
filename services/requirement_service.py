@@ -8,6 +8,7 @@
 from base import db
 from base.errors import ParamsError, InvalidArgsError, DBError
 from models.models import RequirementModel, RequirementProjectModel, RequirementCodeModel
+from . import handle_page
 
 
 class Requirement():
@@ -51,7 +52,8 @@ class Requirement():
         return
 
     @classmethod
-    def list_requirement(cls, type_id=None, keyword=None, status_id=None):
+    def list_requirement(cls, type_id=None, keyword=None, status_id=None,
+                         page_num=1, page_size=999):
         """
         需求列表
 
@@ -74,7 +76,7 @@ class Requirement():
             requirement_obj_list = requirement_obj_list.filter(RequirementModel.name.like(f"%{keyword}%"))
 
         count = requirement_obj_list.count()
-        requirement_obj_list = requirement_obj_list.all()
+        requirement_obj_list = handle_page(requirement_obj_list, page_num, page_size)
 
         requirement_list = list()
         for i in requirement_obj_list:

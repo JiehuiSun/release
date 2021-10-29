@@ -7,6 +7,7 @@
 
 from api import Api
 
+from services import calculate_page
 from services.submit_service import Submit, SubmitLog
 
 
@@ -23,12 +24,17 @@ class SubmitProjectView(Api):
 
         self.ver_params()
 
+        self.handle_page_params()
+
         submit_data = Submit.list_submit(**self.data)
         submit_list = submit_data["data_list"]
 
         ret = {
             "data_list": submit_list,
-            "count": submit_data["count"]
+            "count": submit_data["count"],
+            "page_num": self.data["page_num"],
+            "page_size": self.data["page_size"],
+            "page_count": calculate_page(submit_data["count"])
         }
 
         return self.ret(data=ret)
@@ -47,11 +53,16 @@ class SubmitLogView(Api):
 
         self.ver_params()
 
+        self.handle_page_params()
+
         submit_data = SubmitLog.list_submit_log(**self.data)
 
         ret = {
             "data_list": submit_data["data_list"],
-            "count": submit_data["count"]
+            "count": submit_data["count"],
+            "page_num": self.data["page_num"],
+            "page_size": self.data["page_size"],
+            "page_count": calculate_page(submit_data["count"])
         }
 
         return self.ret(data=ret)

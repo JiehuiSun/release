@@ -8,6 +8,7 @@
 from base import db
 from base.errors import ParamsError
 from models.models import ProjectModel, BuildScriptModel, SCRIPT_TYPE
+from . import handle_page
 
 
 class Project():
@@ -68,7 +69,8 @@ class Project():
         return
 
     @classmethod
-    def list_project(cls, type_id=None, keyword=None, group_id=None, user_id=None):
+    def list_project(cls, type_id=None, keyword=None, group_id=None, user_id=None,
+                     page_num=1, page_size=999):
         """
         项目列表
         """
@@ -81,7 +83,7 @@ class Project():
             project_obj_list = project_obj_list.filter_by(group_id=group_id)
 
         count = project_obj_list.count()
-        project_obj_list = project_obj_list.all()
+        project_obj_list = handle_page(project_obj_list, page_num, page_size)
 
         project_list = list()
         for i in project_obj_list:

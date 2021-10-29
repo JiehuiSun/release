@@ -7,6 +7,7 @@
 
 from api import Api
 
+from services import calculate_page
 from services.build_service import Build, BuildLog
 
 
@@ -23,12 +24,17 @@ class BuildProjectView(Api):
 
         self.ver_params()
 
+        self.handle_page_params()
+
         build_data = Build.list_build(**self.data)
         build_list = build_data["data_list"]
 
         ret = {
             "data_list": build_list,
-            "count": build_data["count"]
+            "count": build_data["count"],
+            "page_num": self.data["page_num"],
+            "page_size": self.data["page_size"],
+            "page_count": calculate_page(build_data["count"])
         }
 
         return self.ret(data=ret)
@@ -47,11 +53,16 @@ class BuildLogView(Api):
 
         self.ver_params()
 
+        self.handle_page_params()
+
         build_data = BuildLog.list_build_log(**self.data)
 
         ret = {
             "data_list": build_data["data_list"],
-            "count": build_data["count"]
+            "count": build_data["count"],
+            "page_num": self.data["page_num"],
+            "page_size": self.data["page_size"],
+            "page_count": calculate_page(build_data["count"])
         }
 
         return self.ret(data=ret)

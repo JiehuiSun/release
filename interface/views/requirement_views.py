@@ -8,8 +8,9 @@
 from api import Api
 from base.errors import ParamsError
 
-from services.requirement_service import Requirement, RequirementGroup
+from services import calculate_page
 from services.user_service import Group, User
+from services.requirement_service import Requirement, RequirementGroup
 
 
 class RequirementViews(Api):
@@ -31,6 +32,8 @@ class RequirementViews(Api):
 
         self.ver_params()
 
+        self.handle_page_params()
+
         requirement_data = Requirement.list_requirement(**self.data)
 
         requirement_list = requirement_data["data_list"]
@@ -45,7 +48,10 @@ class RequirementViews(Api):
 
         ret = {
             "data_list": requirement_list,
-            "count": requirement_data["count"]
+            "count": requirement_data["count"],
+            "page_num": self.data["page_num"],
+            "page_size": self.data["page_size"],
+            "page_count": calculate_page(requirement_data["count"])
         }
 
         return self.ret(data=ret)
