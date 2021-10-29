@@ -35,6 +35,13 @@ REQUIREMENT_STATUS = (
     (40, "已上线"),
 )
 
+LOG_STATUS = (
+    (0, "未开始"),
+    (1, "操作中"),
+    (2, "成功"),
+    (3, "失败"),
+)
+
 
 class GroupModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -161,6 +168,9 @@ class SubmitLogModel(db.Model):
     commit_hash = db.Column(db.String(128), nullable=True, comment="记录当时的最后commit号")
     status = db.Column(db.Integer, nullable=True, default=0, comment="状态: 0 未开始, 1 操作中, 2 成功, 3 失败")
     creator = db.Column(db.Integer, nullable=False, comment="创建人ID(关联DevUserModel)")
+    build_type = db.Column(db.Integer, nullable=False, comment="类型: 1 手动, 2 自动")
+    submit_id = db.Column(db.Integer, nullable=True, comment="提交ID(关联DevUserModel)")
+    file_path = db.Column(db.String(256), nullable=True, comment="tar包路径")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
@@ -179,9 +189,31 @@ class BuildLogModel(db.Model):
     creator = db.Column(db.Integer, nullable=False, comment="创建人ID(关联DevUserModel)")
     build_type = db.Column(db.Integer, nullable=False, comment="类型: 1 手动, 2 自动")
     submit_id = db.Column(db.Integer, nullable=True, comment="提交ID(关联DevUserModel)")
+    file_path = db.Column(db.String(256), nullable=True, comment="tar包路径")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
+
+    def to_dict(self):
+        ret_dict = {}
+        for k in self.__table__.columns:
+            if k.name == "is_deleted":
+                continue
+            value = getattr(self, k.name)
+            if isinstance(value, datetime.datetime):
+                value = value.strftime('%Y-%m-%d %H:%M:%S')
+            elif k.name == "status":
+                if value is None:
+                    ret_dict["status"] = dict()
+                else:
+                    status_dict = {
+                        "code": value,
+                        "value": dict(LOG_STATUS)[value]
+                    }
+                    ret_dict["status"] = status_dict
+                continue
+            ret_dict[k.name] = value
+        return ret_dict
 
 
 class RequirementCodeModel(db.Model):

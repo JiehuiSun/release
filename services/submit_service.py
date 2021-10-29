@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # _*_ encoding: utf-8 _*_
-# Create: 2021-10-23 16:43:19
+# Create: 2021-10-29 10:54:10
 # Author: huihui - sunjiehuimail@foxmail.com
-# Filename: services/build_service.py
+# Filename: services/submit_service.py
 
 
 import time
@@ -10,18 +10,18 @@ import datetime
 
 from base import db
 from base.errors import ParamsError
-from models.models import BuildLogModel
+from models.models import SubmitLogModel
 from .project_service import Project
 from .user_service import User
 from .gitlab_service import GitLab
 
 
-class Build():
+class Submit():
     """
     制品
     """
     @classmethod
-    def list_build(cls, keyword=None, user_id=None, type_id=None,
+    def list_submit(cls, keyword=None, user_id=None, type_id=None,
                    group_id=None, env=None):
         """
         制品库列表
@@ -52,33 +52,33 @@ class Build():
             }
             return ret
 
-        build_obj_list = BuildLogModel.query.filter_by(is_deleted=False)
-        build_obj_list = build_obj_list.filter(BuildLogModel.project_id.in_(project_id_list))
+        submit_obj_list = SubmitLogModel.query.filter_by(is_deleted=False)
+        submit_obj_list = submit_obj_list.filter(SubmitLogModel.project_id.in_(project_id_list))
 
         if user_id:
-            build_obj_list = build_obj_list.filter_by(creator=user_id)
+            submit_obj_list = submit_obj_list.filter_by(creator=user_id)
         if env:
             # TODO 库里直接使用环境名还是使用枚举?
-            build_obj_list = build_obj_list.filter_by(env=env)
+            submit_obj_list = submit_obj_list.filter_by(env=env)
 
         # TODO 正常只取以project_id分组的最新一条即可
-        build_obj_list = build_obj_list.all()
+        submit_obj_list = submit_obj_list.all()
 
-        build_dict_list = dict()
+        submit_dict_list = dict()
         need_user_id_list = list()
-        for i in build_obj_list:
-            if build_dict_list:
+        for i in submit_obj_list:
+            if submit_dict_list:
                 continue
 
-            build_dict = {
+            submit_dict = {
                 "version_num": i.version_num,
                 "creator": i.creator,
                 "last_status": i.status,
                 "dt_last_submit": i.dt_created,
                 "last_duration": (i.dt_updated - i.dt_created).seconds
             }
-            build_dict_list[i.project_id] = build_dict
-            need_user_id_list.append(build_dict["creator"])
+            submit_dict_list[i.project_id] = submit_dict
+            need_user_id_list.append(submit_dict["creator"])
 
         # 一次性获取用户
         user_data = User.list_user(user_id_list=need_user_id_list)
@@ -93,9 +93,9 @@ class Build():
 
         # 整合数据
         for i in project_list:
-            build_dict = build_dict_list.get(i["id"])
-            if build_dict:
-                i.update(build_dict)
+            submit_dict = submit_dict_list.get(i["id"])
+            if submit_dict:
+                i.update(submit_dict)
             else:
                 i["last_status"] = dict()
                 i["dt_last_submit"] = ""
@@ -122,13 +122,13 @@ class Build():
         return ret
 
 
-class BuildLog():
+class SubmitLog():
     """
     制品日志
     """
     @classmethod
-    def list_build_log(cls, project_id, status_id=None, env=None):
-        log_obj_list = BuildLogModel.query.filter_by(project_id=project_id,
+    def list_submit_log(cls, project_id, status_id=None, env=None):
+        log_obj_list = SubmitLogModel.query.filter_by(project_id=project_id,
                                                      is_deleted=False)
         if status_id:
             log_obj_list = log_obj_list.filter_by(status=status_id)
@@ -155,7 +155,7 @@ class BuildLog():
         return ret
 
     @classmethod
-    def add_build_log(cls, project_id, branch, env, commit_id=None):
+    def add_submit_log(cls, project_id, branch, env, commit_id=None):
         project_dict = Project.query_project(project_id, False)
 
         source_project_id = project_dict["source_project_id"]
@@ -165,30 +165,30 @@ class BuildLog():
         name = name.replace(" ", "_")
         tar_file_name = f"{name}_{str(datetime.datetime.now()).split()[0]}_{str(int(time.time()))[5:]}"
 
-        build_log_dict = {
+        submit_log_dict = {
             "version_num": tar_file_name,
-            "title": f"{name} Build",
+            "title": f"{name} Submit",
             "env": env,
             "project_id": project_id,
             "branch": branch,
             "commit_hash": commit_id,
             "status": 1, # TODO
             "creator": 0, # TODO
-            "build_type": 1
+            "submit_type": 1
         }
-        build_obj = BuildLogModel(**build_log_dict)
-        db.session.add(build_obj)
+        submit_obj = SubmitLogModel(**submit_log_dict)
+        db.session.add(submit_obj)
         db.session.commit()
 
         try:
             tar_file_dict = GitLab.clone_project(name, tar_file_name, source_project_id, branch)
         except Exception as e:
-            build_obj.status = 3
+            submit_obj.status = 3
             db.session.commit()
-            raise ParamsError(f"Build Err! Clone Err {str(e)}")
+            raise ParamsError(f"Submit Err! Clone Err {str(e)}")
 
-        build_obj.status = 2
-        build_obj.file_path = tar_file_dict["path"]
+        submit_obj.status = 2
+        submit_obj.file_path = tar_file_dict["path"]
         db.session.commit()
 
         return
