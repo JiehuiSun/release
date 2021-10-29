@@ -7,6 +7,8 @@
 
 from api import Api
 
+from services.build_service import Build
+
 
 class BuildProjectView(Api):
     """
@@ -21,28 +23,12 @@ class BuildProjectView(Api):
 
         self.ver_params()
 
-        build_list = list()
-
-        for i in range(2):
-            build_dict = {
-                "id": i + 1,
-                "name": f"项目{i + 1}",
-                "desc": f"项目{i + 1}的简介",
-                "dt_last_build": "2021-10-10 12:12:12",    # 实事获取
-                "last_duration": 60,    # 上一次耗时(s)
-                "last_status": {
-                    "code": 1,
-                    "value": "成功"
-                },
-                "operator": {
-                    "id": 1,
-                    "name": "狗子"
-                }
-            }
-            build_list.append(build_dict)
+        build_data = Build.list_build(**self.data)
+        build_list = build_data["data_list"]
 
         ret = {
-            "data_list": build_list
+            "data_list": build_list,
+            "count": build_data["count"]
         }
 
         return self.ret(data=ret)
@@ -88,3 +74,15 @@ class BuildLogView(Api):
         }
 
         return self.ret(data=ret)
+
+    def post(self):
+        self.params_dict = {
+            "project_id": "required int",
+            "branch": "required str",
+            "env_id": "required int",
+            "commit_id": "optional str"
+        }
+
+        self.ver_params()
+
+        return self.ret()

@@ -6,6 +6,10 @@
 
 
 from api import Api
+from base.errors import ParamsError
+
+from services.requirement_service import Requirement, RequirementGroup
+from services.user_service import Group, User
 
 
 class RequirementViews(Api):
@@ -13,41 +17,35 @@ class RequirementViews(Api):
     需求
     """
     def list(self):
+        """
+        type_id 是左侧的类型(所有项目/待研发/延期)
+        status_id 是顶部的状态(待研发/研发中/测试中/已上线)
+
+        细品的话这两个状态确实不一样或者说使用上不一样或者更便捷
+        """
         self.params_dict = {
             "type_id": "optional str",
             "status_id": "optional str",
+            "keyword": "optional str"
         }
 
         self.ver_params()
 
-        requirement_list = list()
+        requirement_data = Requirement.list_requirement(**self.data)
 
-        for i in range(2):
-            requirement_dict = {
-                "id": i + 1,
-                "name": f"需求{i + 1}",
-                "desc": f"需求{i + 1}的简介",
-                "dt_plan_started": "2021-10-10 12:12:12",
-                "dt_plan_deved": "2021-10-10 12:12:12",
-                "dt_plan_tested": "2021-10-10 12:12:12",
-                "dt_plan_released": "2021-10-10 12:12:12",
-                "dt_plan_finished": "2021-10-10 12:12:12",
-                "dt_finished": "2021-10-10 12:12:12",
-                "group": [
-                    {
-                        "id": f"{i + 1}",
-                        "value": f"组名{i + 1}",
-                    },
-                ],
-                "status": {
-                    "id": self.data.get("status_id", 1),
-                    "name": "状态名"
-                }
-            }
-            requirement_list.append(requirement_dict)
+        requirement_list = requirement_data["data_list"]
+
+        # 可优化
+        for i in requirement_list:
+            group_list = RequirementGroup.list_group(i["id"])
+            group_id_list = [j["id"] for j in group_list]
+            group_data = Group.list_group(group_id_list=group_id_list)
+
+            i["group"] = group_data["data_list"]
 
         ret = {
-            "data_list": requirement_list
+            "data_list": requirement_list,
+            "count": requirement_data["count"]
         }
 
         return self.ret(data=ret)
@@ -58,21 +56,31 @@ class RequirementViews(Api):
 
         self.ver_params()
 
-        requirement_dict = {
-            "id": self.key,
-            "name": "需求名name",
-            "desc": "简介desc(需求名称+jira地址)",
-            "dt_plan_deved": "2021-10-10 12:12:12",
-            "dt_deved": "2021-10-10 12:12:12",
-            "dt_plan_tested": "2021-10-10 12:12:12",
-            "dt_tested": "2021-10-10 12:12:12",
-            "dt_plan_released": "2021-10-10 12:12:12",
-            "dt_released": "2021-10-10 12:12:12",
-            "dt_plan_finished": "2021-10-10 12:12:12",
-            "dt_finished": "2021-10-10 12:12:12",
-        }
+        requirement_dict = Requirement.query_requirement(self.key)
 
         return self.ret(data=requirement_dict)
+
+    def post(self):
+        self.params_dict = {
+            "name": "required str",
+            "desc": "optional str",
+            "status_code": "optional int",
+            "delayed": "optional str",
+            "dt_plan_started": "optional str",
+            "dt_plan_deved": "optional str",
+            "dt_plan_tested": "optional str",
+            "dt_plan_released": "optional str",
+            "dt_plan_finished": "optional str",
+        }
+
+        self.ver_params()
+
+        try:
+            Requirement.add_requirement(**self.data)
+        except Exception as e:
+            return self.ret(errcode=100000, errmsg=str(e))
+
+        return self.ret()
 
 
 class RequirementGroupViews(Api):
@@ -87,24 +95,69 @@ class RequirementGroupViews(Api):
 
         self.ver_params()
 
-        group_list = list()
+        group_list = RequirementGroup.list_group(**self.data)
 
-        for i in range(2):
-            group_dict = {
-                "id": i + 1,
-                "name": f"需求{i + 1}",
-                "project_id": 1,
-                "branch": "分支",
-                "user_list": [
-                    {"id": 1, "name": "User1"},
-                    {"id": 2, "name": "User2"},
-                ],
-                "comment": "备注"
-            }
-            group_list.append(group_dict)
+        group_id_list = [i["group_id"] for i in group_list]
+
+        group_data = Group.list_group(group_id_list=group_id_list)
+
+        group_dict_list = dict()
+        for i in group_data["data_list"]:
+            group_dict_list[i["id"]] = i["name"]
+
+        for i in group_list:
+            i["group_name"] = group_dict_list.get(i["group_id"])
+            user_id_list = i["user_ids"].split(",")
+            i["user_list"] = User.list_user(user_id_list=user_id_list)
 
         ret = {
             "data_list": group_list
         }
 
         return self.ret(data=ret)
+
+    def put(self):
+        self.params_dict = {
+            "requirement_id": "required int",
+            "type_id": "required int",
+            "group_list": "required list",
+        }
+
+        self.ver_params()
+
+        self.params_dict = {
+            "project_id": "required int",
+            "group_id": "required int",
+            "branch": "required str",
+            "comment": "optional str",
+            "user_id_list": "optional list",
+            "is_auto_deploy": "optional pass"
+        }
+
+        d = self.data
+        group_list = d["group_list"]
+        for i in group_list:
+            self.data = i
+            self.ver_params()
+
+        try:
+            RequirementGroup.update_group(**d)
+        except Exception as e:
+            raise ParamsError(str(e))
+
+        return self.ret()
+
+
+class RequirementCodeViews(Api):
+    """
+    需求状态码
+    """
+    def list(self):
+        self.params_dict = {
+        }
+
+        self.ver_params()
+
+        req_code = {}
+
+        return self.ret(req_code)
