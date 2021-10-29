@@ -144,13 +144,30 @@ class BuildLog():
         log_obj_list = handle_page(log_obj_list, page_num, page_size)
 
         log_list = list()
+        user_id_list = list()
         for i in log_obj_list:
             log_dict = i.to_dict()
-            log_dict["operator"] = {
-                "id": 1,
-                "name": "狗子"
-            }
+            user_id_list.append(log_dict["creator"])
             log_list.append(log_dict)
+
+        user_data = User.list_user(user_id_list=user_id_list)
+        user_dict_list = dict()
+        for i in user_data["data_list"]:
+            if i["id"] in user_dict_list:
+                continue
+            user_dict_list[i["id"]] = {
+                "id": i["id"],
+                "name": i["name"]
+            }
+
+        for i in log_list:
+            user_dict = user_dict_list.get(i["creator"])
+            if not user_dict:
+                user_dict = {
+                    "id": 0,
+                    "name": "未知用户"
+                }
+            i["operator"] = user_dict
 
         ret = {
             "data_list": log_list,
