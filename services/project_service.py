@@ -9,6 +9,7 @@ from base import db
 from base.errors import ParamsError
 from models.models import ProjectModel, BuildScriptModel, SCRIPT_TYPE
 from . import handle_page
+from utils.time_utils import datetime_2_str_by_format
 
 
 class Project():
@@ -86,9 +87,38 @@ class Project():
         project_obj_list = handle_page(project_obj_list, page_num, page_size)
 
         project_list = list()
+        source_project_id_list = list()
         for i in project_obj_list:
+            source_project_id_list.append(i.source_project_id)
             project_list.append(i.to_dict())
 
+        if project_list:
+            # 由于同步项目写错地方了, 避免循环引用, 暂时内部引用
+            from services.gitlab_service import GitLab
+
+            """
+            由于gitlab没有获取指定多个项目
+            经测试, 获取10次get大概1-3秒, 获取1次所有(300个)项目大概5-7秒
+            git_project_list = GitLab.list_project()
+            print(">>: ", int(time.time()) - start_time)
+            git_project_dict_list = dict()
+            for i in git_project_list:
+                if i.id not in source_project_id_list:
+                    continue
+                git_project_dict_list[i.id] = {
+                    "last_activity_at": i.last_activity_at
+                }
+
+            """
+
+            for i in project_list:
+                if not i["source_project_id"]:
+                    continue
+                p = GitLab.get_project(i["source_project_id"])
+                if p:
+                    dt_last_submit = p.last_activity_at
+                    dt_last_submit = dt_last_submit.split(".")[0].replace("T", " ")
+                    i["dt_last_submit"] = dt_last_submit
         ret = {
             "data_list": project_list,
             "count": count
