@@ -196,7 +196,9 @@ class BuildLog():
             "commit_hash": commit_id,
             "status": 1, # TODO
             "creator": 0, # TODO
-            "build_type": 1
+            "build_type": 1,
+            "type_id": project_dict["type_id"],
+            "group_id": project_dict["group_id"],
         }
         build_obj = BuildLogModel(**build_log_dict)
         db.session.add(build_obj)

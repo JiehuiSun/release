@@ -71,7 +71,7 @@ class Project():
 
     @classmethod
     def list_project(cls, type_id=None, keyword=None, group_id=None, user_id=None,
-                     page_num=1, page_size=999):
+                     id_list=None, page_num=1, page_size=999):
         """
         项目列表
         """
@@ -82,6 +82,8 @@ class Project():
             project_obj_list = project_obj_list.filter(ProjectModel.name.like(f"%{keyword}%"))
         if group_id:
             project_obj_list = project_obj_list.filter_by(group_id=group_id)
+        if id_list:
+            project_obj_list = project_obj_list.filter(ProjectModel.id.in_(id_list))
 
         count = project_obj_list.count()
         project_obj_list = handle_page(project_obj_list, page_num, page_size)

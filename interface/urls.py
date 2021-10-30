@@ -8,7 +8,7 @@
 from .views.user_views import GroupView, UserView
 from .views.project_views import ProjectView
 from .views.requirement_views import RequirementViews, RequirementGroupViews
-from .views.submit_views import SubmitProjectView, SubmitLogView
+from .views.submit_views import SubmitProjectView
 from .views.build_views import BuildProjectView, BuildLogView
 from .views.gitlab_views import BranchView, SyncProjectView
 
@@ -33,7 +33,6 @@ v1_routing_dict["requirement_group"] = RequirementGroupViews
 
 # submit
 v1_routing_dict["submit_project"] = SubmitProjectView
-v1_routing_dict["submit_log"] = SubmitLogView
 
 # build
 v1_routing_dict["build_project"] = BuildProjectView

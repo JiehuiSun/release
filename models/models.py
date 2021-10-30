@@ -190,6 +190,8 @@ class BuildLogModel(db.Model):
     build_type = db.Column(db.Integer, nullable=False, comment="类型: 1 手动, 2 自动")
     submit_id = db.Column(db.Integer, nullable=True, comment="提交ID(关联DevUserModel)")
     file_path = db.Column(db.String(256), nullable=True, comment="tar包路径")
+    type_id = db.Column(db.Integer, nullable=True, comment="类型: 10 后端,20 前端, 90 其他")
+    group_id = db.Column(db.Integer, nullable=True, comment="组ID")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
