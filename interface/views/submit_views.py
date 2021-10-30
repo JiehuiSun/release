@@ -46,4 +46,4 @@ class SubmitProjectView(Api):
 
         self.ver_params()
 
-        return self.ret(data=ret)
+        return self.ret()

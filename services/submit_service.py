@@ -5,7 +5,6 @@
 # Filename: services/submit_service.py
 
 
-import time
 import datetime
 
 from base import db
@@ -55,6 +54,13 @@ class Submit():
             user_id_list.append(i.creator)
             project_id_list.append(i.project_id)
             log_list.append(i.to_dict())
+        if not log_list:
+            ret = {
+                "data_list": list(),
+                "count": 0
+            }
+
+            return ret
 
         # 获取项目
         project_data = Project.list_project(id_list=project_id_list)
