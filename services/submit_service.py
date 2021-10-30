@@ -63,7 +63,8 @@ class Submit():
             return ret
 
         # 获取项目
-        project_data = Project.list_project(id_list=project_id_list)
+        project_data = Project.list_project(id_list=project_id_list,
+                                            need_git_info=False)
 
         project_dict_list = dict()
         for i in project_data["data_list"]:
