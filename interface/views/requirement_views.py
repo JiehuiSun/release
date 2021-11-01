@@ -104,6 +104,11 @@ class RequirementViews(Api):
 
         return self.ret()
 
+
+class RequirementStatusViews(Api):
+    """
+    需求
+    """
     def put(self):
         self.params_dict = {
             "id": "required int",

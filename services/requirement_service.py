@@ -7,7 +7,8 @@
 
 from base import db
 from base.errors import ParamsError, InvalidArgsError, DBError
-from models.models import RequirementModel, RequirementProjectModel, RequirementCodeModel
+from models.models import (RequirementModel, RequirementProjectModel, RequirementCodeModel,
+                           REQUIREMENT_FLOW_STATUS, REQUIREMENT_FLOW_DICT)
 from . import handle_page
 
 
@@ -65,12 +66,8 @@ class Requirement():
         """
         requirement_obj_list = RequirementModel.query.filter_by(is_deleted=False)
         if status_id:
-            status_obj = RequirementCodeModel.query.filter_by(code=status_id).one_or_none()
-            if not status_obj:
-                raise DBError("Database Requirement Code Error")
-
-            status_id = status_obj.id
-            requirement_obj_list = requirement_obj_list.filter_by(status_code=status_id)
+            code_list = dict(REQUIREMENT_FLOW_STATUS)[status_id]
+            requirement_obj_list = requirement_obj_list.filter(RequirementModel.status_code.in_(code_list))
 
         if type_id:
             requirement_obj_list = requirement_obj_list.filter_by(type_id=type_id)
@@ -82,6 +79,8 @@ class Requirement():
 
         requirement_list = list()
         for i in requirement_obj_list:
+            r_dict = i.to_dict()
+            # r_dict["status"]
             requirement_list.append(i.to_dict())
 
         ret = {
@@ -99,7 +98,10 @@ class Requirement():
         except Exception as e:
             raise ParamsError("Requirement Not Exist or Use Delete")
 
-        return requirement_obj.to_dict()
+        requirement_dict = requirement_obj.to_dict()
+
+        user_id_list = requirement_dict["all_user_id_list"]
+        return requirement_dict
 
     @classmethod
     def del_requirement(cls, id):
