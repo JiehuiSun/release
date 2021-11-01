@@ -190,8 +190,10 @@ class RequirementCodeViews(Api):
     """
     需求状态码
     """
-    def list(self):
+    def put(self):
         self.params_dict = {
+            "requirement_id": "required int",
+            "status_code": "required int"
         }
 
         self.ver_params()
