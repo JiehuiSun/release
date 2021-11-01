@@ -70,7 +70,7 @@ class Project():
         return
 
     @classmethod
-    def list_project(cls, type_id=None, keyword=None, group_id=None, user_id=None,
+    def list_project(cls, type_id=None, keyword=None, group_ids=None, user_id=None,
                      id_list=None, need_git_info=True, page_num=1, page_size=999):
         """
         项目列表
@@ -80,8 +80,8 @@ class Project():
             project_obj_list = project_obj_list.filter_by(type_id=type_id)
         if keyword:
             project_obj_list = project_obj_list.filter(ProjectModel.name.like(f"%{keyword}%"))
-        if group_id:
-            project_obj_list = project_obj_list.filter_by(group_id=group_id)
+        if group_ids:
+            project_obj_list = project_obj_list.filter(ProjectModel.group_id.in_(group_id.split(",")))
         if id_list:
             project_obj_list = project_obj_list.filter(ProjectModel.id.in_(id_list))
 

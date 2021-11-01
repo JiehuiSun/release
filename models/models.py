@@ -42,17 +42,17 @@ REQUIREMENT_FLOW_DICT = (
     (0, "未开始"),
     (1, "立项"),
     (101, "需求确定"),
-    (101, "需求整理"),
-    (101, "需求完成"),
+    (102, "需求整理"),
+    (103, "需求完成"),
     (401, "待研发"),
-    (401, "研发中"),
-    (401, "研发完成"),
+    (402, "研发中"),
+    (403, "研发完成"),
     (601, "待测试"),
-    (601, "测试中"),
-    (601, "测试完成"),
+    (602, "测试中"),
+    (603, "测试完成"),
     (801, "待上线"),
-    (801, "上线中"),
-    (801, "上线完成"),
+    (802, "上线中"),
+    (803, "上线完成"),
 )
 
 REQUIREMENT_FLOW_STATUS = (
@@ -347,7 +347,7 @@ class RequirementModel(db.Model):
                     continue
                 type_dict = {
                     "id": value,
-                    "name": dict(REQUIREMENT_STATUS)[value]
+                    "name": dict(REQUIREMENT_FLOW_DICT)[value]
                 }
                 ret_dict["status"] = type_dict
             elif k.name.endswith("user_ids"):

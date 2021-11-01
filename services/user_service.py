@@ -41,7 +41,8 @@ class Group():
 
     @classmethod
     def list_group(cls, type_id=None, keyword=None, parent_id=None,
-                   group_id_list: list = [], page_num=1, page_size=999):
+                   group_id_list: list = [], page_num=1, page_size=999,
+                   user_id_list=None):
         """
         组列表
         """
@@ -56,6 +57,12 @@ class Group():
 
         if group_id_list:
             group_obj_list = group_obj_list.filter(GroupModel.id.in_(group_id_list))
+
+        if user_id_list:
+            u_tmp_obj_list = UserGroupModel.query.filter(UserGroupModel.user_id.in_(user_id_list))
+            group_id_list = [i.group_id for i in u_tmp_obj_list]
+            if group_id_list:
+                group_obj_list = group_obj_list.filter(GroupModel.id.in_(group_id_list))
 
         count = group_obj_list.count()
         group_obj_list = handle_page(group_obj_list, page_num, page_size)

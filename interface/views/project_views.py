@@ -18,7 +18,7 @@ class ProjectView(Api):
     def list(self):
         self.params_dict = {
             "type_id": "optional str",
-            "group_id": "optional str",
+            "group_ids": "optional str",
         }
 
         self.ver_params()

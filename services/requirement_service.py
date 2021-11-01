@@ -46,6 +46,16 @@ class Requirement():
             requirement_dict["dt_plan_released"] = dt_plan_released
         if dt_plan_finished:
             requirement_dict["dt_plan_finished"] = dt_plan_finished
+        if dt_plan_finished:
+            requirement_dict["project_user_ids"] = ",".join(str(i) for i in project_user_id_list)
+        if dt_plan_finished:
+            requirement_dict["product_user_ids"] = ",".join(str(i) for i in product_user_id_list)
+        if dt_plan_finished:
+            requirement_dict["web_user_ids"] = ",".join(str(i) for i in web_user_id_list)
+        if dt_plan_finished:
+            requirement_dict["api_user_ids"] = ",".join(str(i) for i in api_user_id_list)
+        if dt_plan_finished:
+            requirement_dict["test_user_ids"] = ",".join(str(i) for i in test_user_id_list)
 
         requirement = RequirementModel(**requirement_dict)
 
@@ -80,7 +90,6 @@ class Requirement():
         requirement_list = list()
         for i in requirement_obj_list:
             r_dict = i.to_dict()
-            # r_dict["status"]
             requirement_list.append(i.to_dict())
 
         ret = {

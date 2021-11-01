@@ -67,6 +67,8 @@ class UserView(Api):
             "type_id": "optional str",
             "keyword": "optional str",
             "group_id": "optional str",
+            "page_num": "optional str",
+            "page_size": "optional str"
         }
 
         self.ver_params()

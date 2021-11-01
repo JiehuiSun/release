@@ -40,9 +40,7 @@ class RequirementViews(Api):
 
         # 可优化
         for i in requirement_list:
-            group_list = RequirementGroup.list_group(i["id"])
-            group_id_list = [j["id"] for j in group_list]
-            group_data = Group.list_group(group_id_list=group_id_list)
+            group_data = Group.list_group(user_id_list=i["all_user_id_list"])
 
             i["group"] = group_data["data_list"]
 
