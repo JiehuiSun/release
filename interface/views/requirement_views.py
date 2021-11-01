@@ -40,9 +40,17 @@ class RequirementViews(Api):
 
         # 可优化
         for i in requirement_list:
-            group_data = Group.list_group(user_id_list=i["all_user_id_list"])
-
-            i["group"] = group_data["data_list"]
+            if i["all_user_id_list"]:
+                group_data = Group.list_group(user_id_list=i["all_user_id_list"])
+                i["group"] = group_data["data_list"]
+            else:
+                i["group"] = []
+            if not i.get("status_code"):
+                i["next_status_code"] = 101
+            elif i.get("status_code", 0) < 400:
+                i["next_status_code"] = 401
+            else:
+                i["next_status_code"] = i["status_code"] + 200
 
         ret = {
             "data_list": requirement_list,
