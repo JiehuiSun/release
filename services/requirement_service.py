@@ -19,7 +19,9 @@ class Requirement():
     def add_requirement(cls, name, desc=None, status_code=None, delayed=None,
                         dt_plan_started=None, dt_plan_deved=None,
                         dt_plan_tested=None, dt_plan_released=None,
-                        dt_plan_finished=None):
+                        dt_plan_finished=None, project_user_id_list=None,
+                        product_user_id_list=None, web_user_id_list=None,
+                        api_user_id_list=None, test_user_id_list=None):
         """
         新增需求(基本信息)
         """
@@ -99,6 +101,22 @@ class Requirement():
 
         return requirement_obj.to_dict()
 
+    @classmethod
+    def del_requirement(cls, id):
+        try:
+            requirement_obj = RequirementModel.query.get(id)
+            requirement_obj.is_deleted = True
+            db.session.commit()
+        except Exception as e:
+            raise ParamsError("Requirement Not Exist or Use Delete")
+
+    @classmethod
+    def update_requirement_status(cls, id, status_id):
+        """
+        更新需求状态
+        """
+        pass
+
 
 class RequirementGroup():
     """
@@ -118,11 +136,13 @@ class RequirementGroup():
                 if not isinstance(i, dict):
                     raise ParamsError(f"'{i}' Params Error")
 
+                project_obj = Project.query_project(i["project_id"], False)
+
                 d = {
                     "requirement_id": requirement_id,
                     "type_id": type_id,
                     "project_id": i["project_id"],
-                    "group_id": i["group_id"],
+                    "group_id": project_obj.group_id,
                     "branch": i["branch"],
                     "comment": i["comment"],
                     "user_ids": ",".join(str(x) for x in i["user_id_list"]),

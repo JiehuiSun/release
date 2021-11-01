@@ -293,6 +293,14 @@ class RequirementModel(db.Model):
                 ret_dict["status"] = type_dict
             ret_dict[k.name] = value
 
+        add_field_dict = {
+            "project_user_list": [],
+            "product_user_list": [],
+            "web_user_list": [],
+            "api_user_list": [],
+            "test_user_list": [],
+        }
+        ret_dict.update(add_field_dict)
         return ret_dict
 
 

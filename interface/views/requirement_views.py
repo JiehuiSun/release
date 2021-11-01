@@ -77,6 +77,11 @@ class RequirementViews(Api):
             "dt_plan_tested": "optional str",
             "dt_plan_released": "optional str",
             "dt_plan_finished": "optional str",
+            "project_user_id_list": "optional list",
+            "product_user_id_list": "optional list",
+            "web_user_id_list": "optional list",
+            "api_user_id_list": "optional list",
+            "test_user_id_list": "optional list",
         }
 
         self.ver_params()
@@ -87,6 +92,30 @@ class RequirementViews(Api):
             return self.ret(errcode=100000, errmsg=str(e))
 
         return self.ret()
+
+    def delete(self):
+        self.params_dict = {
+            "id": "required int"
+        }
+
+        self.ver_params()
+
+        Requirement.del_requirement(**self.data)
+
+        return self.ret()
+
+    def put(self):
+        self.params_dict = {
+            "id": "required int",
+            "status_id": "required int",
+        }
+
+        self.ver_params()
+
+        Requirement.update_requirement_status(**self.data)
+
+        return self.ret()
+
 
 
 class RequirementGroupViews(Api):
@@ -133,7 +162,7 @@ class RequirementGroupViews(Api):
 
         self.params_dict = {
             "project_id": "required int",
-            "group_id": "required int",
+            "group_id": "optional int",
             "branch": "required str",
             "comment": "optional str",
             "user_id_list": "optional list",
