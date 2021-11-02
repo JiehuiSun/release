@@ -210,3 +210,51 @@ class RequirementProject():
             project_list.append(i.to_dict())
 
         return project_list
+
+class RequirementStatusFlow():
+    """
+    需求状态流
+
+    # TODO 临时写死
+    """
+    @classmethod
+    def get_next_status(cls, status_code):
+        i = dict()
+        if not status_code:
+            i["next_status_code"] = 1
+            i["next_status_name"] = "立项"
+        elif status_code == 1:
+            i["next_status_code"] = 101
+            i["next_status_name"] = "需求确定"
+        elif status_code < 400:
+            i["next_status_code"] = 401
+            i["next_status_name"] = "进入开发"
+        elif status_code < 600:
+            i["next_status_code"] = 601
+            i["next_status_name"] = "提测"
+        elif status_code < 800:
+            i["next_status_code"] = 801
+            i["next_status_name"] = "上线"
+        else:
+            i["next_status_code"] = 888
+            i["next_status_name"] = "已上线"
+
+        return i
+
+
+class RequirementStatus():
+    @classmethod
+    def update_status(cls, requirement_id, status_code):
+        """
+        更新需求状态
+        """
+        try:
+            requirement_obj = RequirementModel.query.get(requirement_id)
+            if status_code not in dict(REQUIREMENT_FLOW_DICT):
+                raise ParamsError("Update Status Err! Status Code Err!")
+            requirement_obj.status_code = status_code
+            db.session.commit()
+        except Exception as e:
+            raise ParamsError(f"Update Status Err! {str(e)}")
+
+        return

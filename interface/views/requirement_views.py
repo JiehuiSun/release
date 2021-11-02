@@ -10,7 +10,9 @@ from base.errors import ParamsError
 
 from services import calculate_page
 from services.user_service import Group, User
-from services.requirement_service import Requirement, RequirementGroup, RequirementProject
+from services.requirement_service import (Requirement, RequirementGroup,
+                                          RequirementProject, RequirementStatusFlow,
+                                          RequirementStatus)
 
 
 class RequirementViews(Api):
@@ -46,16 +48,10 @@ class RequirementViews(Api):
             else:
                 i["group"] = []
 
-            # TODO 状态流处理
-            if not i.get("status_code"):
-                i["next_status_code"] = 101
-                i["next_status_name"] = "需求确定"
-            elif i.get("status_code", 0) < 400:
-                i["next_status_code"] = 401
-                i["next_status_name"] = "进入开发"
-            else:
-                i["next_status_code"] = i["status_code"] + 200
-                i["next_status_name"] = "提测"
+            # 状态流处理
+            next_status = RequirementStatusFlow.get_next_status(i.get("status_code", 0))
+            i["next_status_code"] = next_status["next_status_code"]
+            i["next_status_name"] = next_status["next_status_name"]
 
         ret = {
             "data_list": requirement_list,
@@ -223,6 +219,8 @@ class RequirementProjectViews(Api):
 class RequirementCodeViews(Api):
     """
     需求状态码
+
+    # TODO 状态码不应该前端传，而是后端自己处理(tmp)
     """
     def put(self):
         self.params_dict = {
@@ -232,6 +230,6 @@ class RequirementCodeViews(Api):
 
         self.ver_params()
 
-        req_code = {}
+        RequirementStatus.update_status(**self.data)
 
         return self.ret()
