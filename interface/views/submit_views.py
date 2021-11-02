@@ -41,7 +41,7 @@ class SubmitProjectView(Api):
 
     def post(self):
         self.params_dict = {
-            "log_id": "required str",
+            "log_id": "required int",
         }
 
         self.ver_params()

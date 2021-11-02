@@ -62,8 +62,12 @@ class Api(VerParams, Resp, View):
 
         if not page_num:
             self.data["page_num"] = 1
+        else:
+            self.data["page_num"] = int(self.data["page_num"])
         if not page_size:
             self.data["page_size"] = 10
+        else:
+            self.data["page_size"] = int(self.data["page_size"])
 
         return
 

@@ -45,12 +45,17 @@ class RequirementViews(Api):
                 i["group"] = group_data["data_list"]
             else:
                 i["group"] = []
+
+            # TODO 状态流处理
             if not i.get("status_code"):
                 i["next_status_code"] = 101
+                i["next_status_name"] = "需求确定"
             elif i.get("status_code", 0) < 400:
                 i["next_status_code"] = 401
+                i["next_status_name"] = "进入开发"
             else:
                 i["next_status_code"] = i["status_code"] + 200
+                i["next_status_name"] = "提测"
 
         ret = {
             "data_list": requirement_list,
