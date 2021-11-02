@@ -8,7 +8,8 @@
 from base import db
 from base.errors import ParamsError, InvalidArgsError, DBError
 from models.models import (RequirementModel, RequirementProjectModel, RequirementCodeModel,
-                           REQUIREMENT_FLOW_STATUS, REQUIREMENT_FLOW_DICT)
+                           REQUIREMENT_FLOW_STATUS, REQUIREMENT_FLOW_DICT,
+                           REQUIREMENT_FLOW_NEXT_DICT)
 from . import handle_page
 from utils import query_operate_ids
 from utils.time_utils import now_dt
@@ -328,23 +329,30 @@ class RequirementStatusFlow():
     """
     @classmethod
     def get_next_status(cls, status_code):
+        """
+        TODO 为便于扩展, 应该循环状态流取状态节点，利用一样状态流的展示取下一个
+        """
         i = dict()
         if not status_code:
             i["next_status_code"] = 1
             i["next_status_name"] = "立项"
-        elif status_code == 1:
+        elif status_code in (1, 2):
             i["next_status_code"] = 401
             i["next_status_name"] = "进入开发"
-        elif status_code < 600:
-            i["next_status_code"] = 601
-            i["next_status_name"] = "提测"
-        elif status_code < 800:
-            i["next_status_code"] = 801
-            i["next_status_name"] = "上线"
-        else:
-            i["next_status_code"] = 888
-            i["next_status_name"] = "已上线"
 
+        if i:
+            return i
+
+        for x in REQUIREMENT_FLOW_DICT:
+            if status_code == x[0]:
+                index_n = REQUIREMENT_FLOW_DICT.index(x)
+                if index_n < len(REQUIREMENT_FLOW_DICT) - 1:
+                    next_index = index_n + 1
+                else:
+                    next_index = index_n
+                i["next_status_code"] = REQUIREMENT_FLOW_DICT[next_index][0]
+                i["next_status_name"] = dict(REQUIREMENT_FLOW_NEXT_DICT)[i["next_status_code"]]
+                return i
         return i
 
 
