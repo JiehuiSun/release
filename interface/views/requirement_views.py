@@ -113,6 +113,34 @@ class RequirementViews(Api):
 
         return self.ret()
 
+    def put(self):
+        self.params_dict = {
+            "id": "required int",
+            "name": "required str",
+            "desc": "optional str",
+            "status_code": "optional int",
+            "delayed": "optional str",
+            "dt_plan_started": "optional str",
+            "dt_plan_deved": "optional str",
+            "dt_plan_tested": "optional str",
+            "dt_plan_released": "optional str",
+            "dt_plan_finished": "optional str",
+            "project_user_id_list": "optional list",
+            "product_user_id_list": "optional list",
+            "web_user_id_list": "optional list",
+            "api_user_id_list": "optional list",
+            "test_user_id_list": "optional list",
+        }
+
+        self.ver_params()
+
+        try:
+            Requirement.update_requirement(**self.data)
+        except Exception as e:
+            return self.ret(errcode=100000, errmsg=str(e))
+
+        return self.ret()
+
 
 class RequirementStatusViews(Api):
     """

@@ -47,15 +47,15 @@ class Requirement():
             requirement_dict["dt_plan_released"] = dt_plan_released
         if dt_plan_finished:
             requirement_dict["dt_plan_finished"] = dt_plan_finished
-        if dt_plan_finished:
+        if project_user_id_list:
             requirement_dict["project_user_ids"] = ",".join(str(i) for i in project_user_id_list)
-        if dt_plan_finished:
+        if product_user_id_list:
             requirement_dict["product_user_ids"] = ",".join(str(i) for i in product_user_id_list)
-        if dt_plan_finished:
+        if web_user_id_list:
             requirement_dict["web_user_ids"] = ",".join(str(i) for i in web_user_id_list)
-        if dt_plan_finished:
+        if api_user_id_list:
             requirement_dict["api_user_ids"] = ",".join(str(i) for i in api_user_id_list)
-        if dt_plan_finished:
+        if test_user_id_list:
             requirement_dict["test_user_ids"] = ",".join(str(i) for i in test_user_id_list)
 
         requirement = RequirementModel(**requirement_dict)
@@ -128,6 +128,53 @@ class Requirement():
         更新需求状态
         """
         pass
+
+    @classmethod
+    def update_requirement(cls, id, name=None, desc=None, status_code=None, delayed=None,
+                           dt_plan_started=None, dt_plan_deved=None,
+                           dt_plan_tested=None, dt_plan_released=None,
+                           dt_plan_finished=None, project_user_id_list=None,
+                           product_user_id_list=None, web_user_id_list=None,
+                           api_user_id_list=None, test_user_id_list=None):
+        """
+        更新需求(基本信息)
+        """
+        try:
+            requirement_obj = RequirementModel.query.get(id)
+        except Exception as e:
+            raise ParamsError(f"Update Err! ID Not Exist or Use Delete! {str(e)}")
+
+        if name and name != requirement_obj.name:
+            requirement_obj.name = name
+        if desc and desc != requirement_obj.desc:
+            requirement_obj.desc = desc
+        if delayed and delayed != requirement_obj.delayed:
+            requirement_obj.delayed = delayed
+        if dt_plan_started:
+            requirement_obj.dt_plan_started = dt_plan_started
+        if dt_plan_deved:
+            requirement_obj.dt_plan_deved = dt_plan_deved
+        if dt_plan_tested:
+            requirement_obj.dt_plan_tested = dt_plan_tested
+        if dt_plan_released:
+            requirement_obj.dt_plan_released = dt_plan_released
+        if dt_plan_finished:
+            requirement_obj.dt_plan_finished = dt_plan_finished
+
+        if project_user_id_list is not None:
+            requirement_obj.project_user_ids = ",".join(str(i) for i in project_user_id_list)
+        if product_user_id_list is not None:
+            requirement_obj.product_user_ids = ",".join(str(i) for i in product_user_id_list)
+        if api_user_id_list is not None:
+            requirement_obj.api_user_ids = ",".join(str(i) for i in api_user_id_list)
+        if web_user_id_list is not None:
+            requirement_obj.web_user_ids = ",".join(str(i) for i in web_user_id_list)
+        if test_user_id_list is not None:
+            requirement_obj.test_user_ids = ",".join(str(i) for i in test_user_id_list)
+
+        db.session.commit()
+
+        return
 
 
 class RequirementGroup():
