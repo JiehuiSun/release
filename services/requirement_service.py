@@ -11,6 +11,7 @@ from models.models import (RequirementModel, RequirementProjectModel, Requiremen
                            REQUIREMENT_FLOW_STATUS, REQUIREMENT_FLOW_DICT)
 from . import handle_page
 from utils import query_operate_ids
+from utils.time_utils import now_dt
 
 
 class Requirement():
@@ -356,6 +357,17 @@ class RequirementStatus():
             if status_code not in dict(REQUIREMENT_FLOW_DICT):
                 raise ParamsError("Update Status Err! Status Code Err!")
             requirement_obj.status_code = status_code
+
+            # 修改实际时间
+            if status_code == 1:
+                requirement_obj.dt_started = now_dt()
+            elif status_code == 401:
+                requirement_obj.dt_deved = now_dt()
+            elif status_code == 601:
+                requirement_obj.dt_tested = now_dt()
+            elif status_code == 801:
+                requirement_obj.dt_finished = now_dt()
+
             db.session.commit()
         except Exception as e:
             raise ParamsError(f"Update Status Err! {str(e)}")
