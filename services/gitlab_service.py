@@ -58,10 +58,7 @@ class GitLab():
         """
         同步项目，如果开通其他来源的项目，需以source_id区分处理
         """
-        try:
-            projects = cls.gitlab().projects.list(all=True)
-        except Exception as e:
-            raise InvalidArgsError(f"Sync Project Err! GitLab Config Err. {str(e)}")
+        projects = cls.list_project()
 
         project_dict_list = dict()
         for i in projects:
@@ -117,3 +114,27 @@ class GitLab():
             "path": tar_file_path.replace(f"{repository_dir}/", "")
         }
         return ret
+
+    @classmethod
+    def list_project(cls):
+        """
+        项目列表
+
+        不支持多个id搜索, 只能后期加keyword
+        """
+        try:
+            projects = cls.gitlab().projects.list(all=True)
+        except Exception as e:
+            raise InvalidArgsError(f"List Project Err! GitLab Config Err. {str(e)}")
+        return projects
+
+    @classmethod
+    def get_project(cls, project_id):
+        """
+        获取项目
+        """
+        try:
+            project = cls.gitlab().projects.get(project_id)
+        except Exception as e:
+            raise InvalidArgsError(f"Get Project Err! GitLab Config Err. {str(e)}")
+        return project

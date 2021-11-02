@@ -7,6 +7,7 @@
 
 from api import Api
 
+from services import calculate_page
 from services.project_service import Project
 
 
@@ -17,16 +18,24 @@ class ProjectView(Api):
     def list(self):
         self.params_dict = {
             "type_id": "optional str",
-            "group_id": "optional str",
+            "group_ids": "optional str",
+            "user_ids": "optional str",
+            "page_num": "optional str",
+            "page_size": "optional str"
         }
 
         self.ver_params()
+
+        self.handle_page_params()
 
         project_data = Project.list_project(**self.data)
 
         ret = {
             "data_list": project_data["data_list"],
-            "count": project_data["count"]
+            "count": project_data["count"],
+            "page_num": self.data["page_num"],
+            "page_size": self.data["page_size"],
+            "page_count": calculate_page(project_data["count"])
         }
 
         return self.ret(data=ret)

@@ -7,6 +7,7 @@
 
 from base import db
 from models.models import DevUserModel, GroupModel, UserGroupModel
+from . import handle_page
 
 
 class Group():
@@ -40,7 +41,8 @@ class Group():
 
     @classmethod
     def list_group(cls, type_id=None, keyword=None, parent_id=None,
-                   group_id_list: list = []):
+                   group_id_list: list = [], page_num=1, page_size=999,
+                   user_id_list=None):
         """
         组列表
         """
@@ -56,8 +58,14 @@ class Group():
         if group_id_list:
             group_obj_list = group_obj_list.filter(GroupModel.id.in_(group_id_list))
 
+        if user_id_list is not None:
+            u_tmp_obj_list = UserGroupModel.query.filter(UserGroupModel.user_id.in_(user_id_list))
+            group_id_list = [i.group_id for i in u_tmp_obj_list]
+            if group_id_list:
+                group_obj_list = group_obj_list.filter(GroupModel.id.in_(group_id_list))
+
         count = group_obj_list.count()
-        group_obj_list = group_obj_list.all()
+        group_obj_list = handle_page(group_obj_list, page_num, page_size)
 
         group_list = list()
         for i in group_obj_list:
@@ -75,7 +83,8 @@ class User():
     用户
     """
     @classmethod
-    def list_user(cls, keyword=None, user_id_list: list = [], group_id=None, type_id=None):
+    def list_user(cls, keyword=None, user_id_list: list = [], group_id=None,
+                  type_id=None, page_num=1, page_size=999):
         user_obj_list = DevUserModel.query.filter_by(is_deleted=False)
 
         if keyword:
@@ -90,7 +99,7 @@ class User():
             user_obj_list = user_obj_list.filter(DevUserModel.id.in_(user_id_list))
 
         count = user_obj_list.count()
-        user_obj_list = user_obj_list.all()
+        user_obj_list = handle_page(user_obj_list, page_num, page_size)
 
         user_list = list()
         for i in user_obj_list:

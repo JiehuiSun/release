@@ -51,6 +51,26 @@ class Api(VerParams, Resp, View):
         if ret is not True:
             raise errors.ParamsError(ret)
 
+    def handle_page_params(self):
+        """
+        处理分页的参数
+
+        如果有单独分页数的情况，重写即可
+        """
+        page_num = self.data.get("page_num")
+        page_size = self.data.get("page_size")
+
+        if not page_num:
+            self.data["page_num"] = 1
+        else:
+            self.data["page_num"] = int(self.data["page_num"])
+        if not page_size:
+            self.data["page_size"] = 10
+        else:
+            self.data["page_size"] = int(self.data["page_size"])
+
+        return
+
     def _pre_handle(self):
         """
             调用具体业务方法之前，如果需要一些权限认证或者其它操作在这里实现

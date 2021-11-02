@@ -14,6 +14,9 @@ from utils import time_utils
 WORK_TYPE = (
     (10, "后端"),
     (20, "前端"),
+    (30, "产品"),
+    (40, "测试"),
+    (50, "项目经理"),
     (90, "其他"),
 )
 
@@ -35,11 +38,61 @@ REQUIREMENT_STATUS = (
     (40, "已上线"),
 )
 
+REQUIREMENT_FLOW_DICT = (
+    (0, "未开始"),
+    (1, "立项"),
+    (101, "需求确定"),
+    (102, "需求整理"),
+    (103, "需求完成"),
+    (401, "待研发"),
+    (402, "研发中"),
+    (403, "研发完成"),
+    (601, "待测试"),
+    (602, "测试中"),
+    (603, "测试完成"),
+    (801, "待上线"),
+    (802, "上线中"),
+    (803, "上线完成"),
+)
+
+REQUIREMENT_FLOW_STATUS = (
+    (10, (0, 1, 101, 102, 103)),
+    (20, (401, 402, 403)),
+    (30, (601, 602, 603)),
+    (40, (801, 802, 803)),
+)
+
+
 LOG_STATUS = (
     (0, "未开始"),
     (1, "操作中"),
     (2, "成功"),
     (3, "失败"),
+)
+
+
+JOB_TYPE = (
+    (11, "Python"),
+    (12, "PHP"),
+    (13, "Java"),
+    (14, "Go"),
+
+    (21, "Web"),
+    (22, "Android"),
+    (23, "IOS"),
+    (24, "MiniApp"),
+
+    (31, "PDA"),
+    (31, "PDB"),
+    (31, "PDC"),
+
+    (41, "TA"),
+    (41, "TB"),
+    (41, "TC"),
+
+    (51, "PA"),
+    (51, "PB"),
+    (51, "PC"),
 )
 
 
@@ -190,6 +243,8 @@ class BuildLogModel(db.Model):
     build_type = db.Column(db.Integer, nullable=False, comment="类型: 1 手动, 2 自动")
     submit_id = db.Column(db.Integer, nullable=True, comment="提交ID(关联DevUserModel)")
     file_path = db.Column(db.String(256), nullable=True, comment="tar包路径")
+    type_id = db.Column(db.Integer, nullable=True, comment="类型: 10 后端,20 前端, 90 其他")
+    group_id = db.Column(db.Integer, nullable=True, comment="组ID")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
@@ -242,6 +297,11 @@ class RequirementModel(db.Model):
     status_code = db.Column(db.Integer, nullable=True, comment="状态(关联REQUIREMENT_STATUS)")
     delayed = db.Column(db.String(256), nullable=True, comment="过程记录")
     type_id = db.Column(db.Integer, nullable=True, comment="类型(延期啥的,关联REQUIREMENT_TYPE)")
+    project_user_ids = db.Column(db.String(256), nullable=True, comment="项目经理用户")
+    product_user_ids = db.Column(db.String(256), nullable=True, comment="产品经理用户")
+    web_user_ids = db.Column(db.String(256), nullable=True, comment="前端用户")
+    api_user_ids = db.Column(db.String(256), nullable=True, comment="后端用户")
+    test_user_ids = db.Column(db.String(256), nullable=True, comment="测试用户")
 
     # plan
     dt_plan_started = db.Column(db.DateTime, nullable=True, default=time_utils.now_dt, comment="计划启动时间")
@@ -263,6 +323,7 @@ class RequirementModel(db.Model):
 
     def to_dict(self):
         ret_dict = {}
+        all_u_id_list = list()
         for k in self.__table__.columns:
             if k.name == "is_deleted":
                 continue
@@ -286,10 +347,19 @@ class RequirementModel(db.Model):
                     continue
                 type_dict = {
                     "id": value,
-                    "name": dict(REQUIREMENT_STATUS)[value]
+                    "name": dict(REQUIREMENT_FLOW_DICT)[value]
                 }
                 ret_dict["status"] = type_dict
+            elif k.name.endswith("user_ids"):
+                if value:
+                    u_id_list = [int(x) for x in value.split(",")]
+                else:
+                    u_id_list = list()
+                all_u_id_list += u_id_list
+                ret_dict[k.name.replace("ids", "id_list")] = u_id_list
+                continue
             ret_dict[k.name] = value
+        ret_dict["all_user_id_list"] = all_u_id_list
 
         return ret_dict
 
@@ -305,7 +375,7 @@ class RequirementProjectModel(db.Model):
     requirement_id = db.Column(db.Integer, nullable=False, comment="需求ID(关联RequirementModel)")
     project_id = db.Column(db.Integer, nullable=False, comment="项目ID(关联ProjectModel)")
     group_id = db.Column(db.Integer, nullable=True, comment="组ID(关联GroupModel)")    # 可为空, 前期可以不使用
-    user_ids = db.Column(db.String(128), nullable=False, comment="用户ID(应该做外建方便后期扩展)")
+    user_ids = db.Column(db.String(128), nullable=True, comment="用户ID(应该做外建方便后期扩展)")
     type_id = db.Column(db.Integer, nullable=False, comment="类型ID(关联WORK_TYPE)")
     branch = db.Column(db.String(128), nullable=False, comment="分支")
     progress_status = db.Column(db.Integer, nullable=False, default=1,

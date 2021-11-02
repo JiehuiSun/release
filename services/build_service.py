@@ -14,6 +14,7 @@ from models.models import BuildLogModel
 from .project_service import Project
 from .user_service import User
 from .gitlab_service import GitLab
+from . import handle_page
 
 
 class Build():
@@ -22,7 +23,7 @@ class Build():
     """
     @classmethod
     def list_build(cls, keyword=None, user_id=None, type_id=None,
-                   group_id=None, env=None):
+                   group_id=None, env=None, page_num=1, page_size=999):
         """
         制品库列表
 
@@ -33,7 +34,10 @@ class Build():
         env_id: 环境CODE
         时间筛选待确定
         """
-        project_params = dict()
+        project_params = {
+            "page_num": page_num,
+            "page_size": page_size
+        }
         if keyword:
             project_params["keyword"] = keyword
         if group_id:
@@ -127,7 +131,8 @@ class BuildLog():
     制品日志
     """
     @classmethod
-    def list_build_log(cls, project_id, status_id=None, env=None):
+    def list_build_log(cls, project_id, status_id=None, env=None,
+                       page_num=1, page_size=999):
         log_obj_list = BuildLogModel.query.filter_by(project_id=project_id,
                                                      is_deleted=False)
         if status_id:
@@ -136,16 +141,33 @@ class BuildLog():
             log_obj_list = log_obj_list.filter_by(env=env)
 
         count = log_obj_list.count()
-        log_obj_list = log_obj_list.all()
+        log_obj_list = handle_page(log_obj_list, page_num, page_size)
 
         log_list = list()
+        user_id_list = list()
         for i in log_obj_list:
             log_dict = i.to_dict()
-            log_dict["operator"] = {
-                "id": 1,
-                "name": "狗子"
-            }
+            user_id_list.append(log_dict["creator"])
             log_list.append(log_dict)
+
+        user_data = User.list_user(user_id_list=user_id_list)
+        user_dict_list = dict()
+        for i in user_data["data_list"]:
+            if i["id"] in user_dict_list:
+                continue
+            user_dict_list[i["id"]] = {
+                "id": i["id"],
+                "name": i["name"]
+            }
+
+        for i in log_list:
+            user_dict = user_dict_list.get(i["creator"])
+            if not user_dict:
+                user_dict = {
+                    "id": 0,
+                    "name": "未知用户"
+                }
+            i["operator"] = user_dict
 
         ret = {
             "data_list": log_list,
@@ -174,7 +196,9 @@ class BuildLog():
             "commit_hash": commit_id,
             "status": 1, # TODO
             "creator": 0, # TODO
-            "build_type": 1
+            "build_type": 1,
+            "type_id": project_dict["type_id"],
+            "group_id": project_dict["group_id"],
         }
         build_obj = BuildLogModel(**build_log_dict)
         db.session.add(build_obj)
