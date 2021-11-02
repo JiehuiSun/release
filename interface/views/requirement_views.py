@@ -29,7 +29,9 @@ class RequirementViews(Api):
         self.params_dict = {
             "type_id": "optional str",
             "status_id": "optional str",
-            "keyword": "optional str"
+            "keyword": "optional str",
+            "page_num": "optional str",
+            "page_size": "optional str"
         }
 
         self.ver_params()
@@ -214,6 +216,35 @@ class RequirementProjectViews(Api):
         }
 
         return self.ret(data=ret)
+
+    def put(self):
+        self.params_dict = {
+            "requirement_id": "required int",
+            "type_id": "required int",
+            "project_list": "required list",
+        }
+
+        self.ver_params()
+
+        self.params_dict = {
+            "project_id": "required int",
+            "branch": "required str",
+            "comment": "optional str",
+            "is_auto_deploy": "optional pass"
+        }
+
+        d = self.data
+        group_list = d["project_list"]
+        for i in group_list:
+            self.data = i
+            self.ver_params()
+
+        try:
+            RequirementProject.update_project(**d)
+        except Exception as e:
+            raise ParamsError(str(e))
+
+        return self.ret()
 
 
 class RequirementCodeViews(Api):

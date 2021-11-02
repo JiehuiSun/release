@@ -194,3 +194,12 @@ def tasks(**params):
             return res
         return wrapper
     return outter
+
+
+def query_operate_ids(old_id_list, new_id_list):
+    """
+    查询差异id
+    """
+    add_id_list = set(new_id_list).difference(set(old_id_list))
+    del_id_list = set(old_id_list).difference(set(new_id_list))
+    return {'add_id_list': list(add_id_list), 'del_id_list': list(del_id_list)}

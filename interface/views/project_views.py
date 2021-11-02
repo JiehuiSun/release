@@ -19,6 +19,8 @@ class ProjectView(Api):
         self.params_dict = {
             "type_id": "optional str",
             "group_ids": "optional str",
+            "page_num": "optional str",
+            "page_size": "optional str"
         }
 
         self.ver_params()

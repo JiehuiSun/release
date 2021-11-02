@@ -10,6 +10,7 @@ from base.errors import ParamsError, InvalidArgsError, DBError
 from models.models import (RequirementModel, RequirementProjectModel, RequirementCodeModel,
                            REQUIREMENT_FLOW_STATUS, REQUIREMENT_FLOW_DICT)
 from . import handle_page
+from utils import query_operate_ids
 
 
 class Requirement():
@@ -76,7 +77,7 @@ class Requirement():
         """
         requirement_obj_list = RequirementModel.query.filter_by(is_deleted=False)
         if status_id:
-            code_list = dict(REQUIREMENT_FLOW_STATUS)[status_id]
+            code_list = dict(REQUIREMENT_FLOW_STATUS)[int(status_id)]
             requirement_obj_list = requirement_obj_list.filter(RequirementModel.status_code.in_(code_list))
 
         if type_id:
@@ -211,6 +212,61 @@ class RequirementProject():
 
         return project_list
 
+    @classmethod
+    def update_project(cls, requirement_id, type_id, data_list: list):
+        project_obj_list = RequirementProjectModel.query.filter_by(requirement_id=requirement_id,
+                                                                   is_deleted=False,
+                                                                   type_id=type_id).all()
+        if not project_obj_list:
+            for i in data_list:
+                i["requirement_id"] = requirement_id
+                i["type_id"] = type_id
+            cls.add_project(data_list)
+
+            return
+        old_id_list = [i.project_id for i in project_obj_list]
+        new_id_list = [i["project_id"] for i in data_list]
+
+        id_data = query_operate_ids(old_id_list, new_id_list)
+        if id_data["add_id_list"]:
+            need_add_list = list()
+            for i in data_list:
+                if i["project_id"] in id_data["add_id_list"]:
+                    i["requirement_id"] = requirement_id
+                    i["type_id"] = type_id
+                    need_add_list.append(i)
+            cls.add_project(need_add_list)
+
+        if id_data["del_id_list"]:
+            need_del_list = list()
+            for i in project_obj_list:
+                if i.project_id in need_del_list:
+                    need_del_list.append(i.id)
+            cls.del_project(need_del_list)
+
+        return
+
+
+    @classmethod
+    def add_project(cls, data_list: list):
+        # 批量添加
+        for i in data_list:
+            o = RequirementProjectModel(**i)
+            db.session.add(o)
+        db.session.commit()
+
+        return
+
+    @classmethod
+    def del_project(cls, id_list: list):
+        # 批量软删除
+        project_obj_list = RequirementProjectModel.query.filter(
+            RequirementProjectModel.id.in_(id_list)
+        ).update({"is_deleted": True})
+
+        return
+
+
 class RequirementStatusFlow():
     """
     需求状态流
@@ -224,9 +280,6 @@ class RequirementStatusFlow():
             i["next_status_code"] = 1
             i["next_status_name"] = "立项"
         elif status_code == 1:
-            i["next_status_code"] = 101
-            i["next_status_name"] = "需求确定"
-        elif status_code < 400:
             i["next_status_code"] = 401
             i["next_status_name"] = "进入开发"
         elif status_code < 600:

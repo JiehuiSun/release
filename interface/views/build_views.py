@@ -20,6 +20,8 @@ class BuildProjectView(Api):
             "type_id": "optional str",
             "group_id": "optional str",
             "env": "optional str",
+            "page_num": "optional str",
+            "page_size": "optional str"
         }
 
         self.ver_params()
