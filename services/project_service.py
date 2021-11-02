@@ -8,6 +8,7 @@
 from base import db
 from base.errors import ParamsError
 from models.models import ProjectModel, BuildScriptModel, SCRIPT_TYPE
+from models.models import UserGroupModel
 from . import handle_page
 from utils.time_utils import datetime_2_str_by_format
 
@@ -70,7 +71,7 @@ class Project():
         return
 
     @classmethod
-    def list_project(cls, type_id=None, keyword=None, group_ids=None, user_id=None,
+    def list_project(cls, type_id=None, keyword=None, group_ids=None, user_ids=None,
                      id_list=None, need_git_info=True, page_num=1, page_size=999):
         """
         项目列表
@@ -81,9 +82,14 @@ class Project():
         if keyword:
             project_obj_list = project_obj_list.filter(ProjectModel.name.like(f"%{keyword}%"))
         if group_ids:
-            project_obj_list = project_obj_list.filter(ProjectModel.group_id.in_(group_id.split(",")))
+            project_obj_list = project_obj_list.filter(ProjectModel.group_id.in_(group_ids.split(",")))
         if id_list:
             project_obj_list = project_obj_list.filter(ProjectModel.id.in_(id_list))
+
+        if user_ids is not None:
+            u_tmp_obj_list = UserGroupModel.query.filter(UserGroupModel.user_id.in_(user_ids.split(",")))
+            group_id_list = [i.group_id for i in u_tmp_obj_list]
+            project_obj_list = project_obj_list.filter(ProjectModel.group_id.in_(group_id_list))
 
         count = project_obj_list.count()
         project_obj_list = handle_page(project_obj_list, page_num, page_size)
