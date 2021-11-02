@@ -343,7 +343,7 @@ class RequirementModel(db.Model):
                 ret_dict["type"] = type_dict
 
             elif k.name == "status_code":
-                if not value:
+                if value is None:
                     ret_dict["status"] = dict()
                     continue
                 type_dict = {

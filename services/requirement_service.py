@@ -151,6 +151,8 @@ class Requirement():
             requirement_obj.desc = desc
         if delayed and delayed != requirement_obj.delayed:
             requirement_obj.delayed = delayed
+        if status_code and status_code < 10:
+            requirement_obj.status_code = status_code
         if dt_plan_started:
             requirement_obj.dt_plan_started = dt_plan_started
         if dt_plan_deved:
