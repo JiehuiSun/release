@@ -10,7 +10,7 @@ from base.errors import ParamsError
 
 from services import calculate_page
 from services.user_service import Group, User
-from services.requirement_service import Requirement, RequirementGroup
+from services.requirement_service import Requirement, RequirementGroup, RequirementProject
 
 
 class RequirementViews(Api):
@@ -194,6 +194,27 @@ class RequirementGroupViews(Api):
         return self.ret()
 
 
+class RequirementProjectViews(Api):
+    """
+    需求项目
+    """
+    def list(self):
+        self.params_dict = {
+            "requirement_id": "required str",
+            "type_id": "optional str"
+        }
+
+        self.ver_params()
+
+        project_list = RequirementProject.list_project(**self.data)
+
+        ret = {
+            "data_list": project_list
+        }
+
+        return self.ret(data=ret)
+
+
 class RequirementCodeViews(Api):
     """
     需求状态码
@@ -208,4 +229,4 @@ class RequirementCodeViews(Api):
 
         req_code = {}
 
-        return self.ret(req_code)
+        return self.ret()

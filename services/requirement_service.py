@@ -188,3 +188,25 @@ class RequirementGroup():
             group_list.append(i.to_dict())
 
         return group_list
+
+
+class RequirementProject():
+    """
+    需求项目
+    """
+    @classmethod
+    def list_project(cls, requirement_id, type_id=None):
+        project_obj_list = RequirementProjectModel.query.filter_by(requirement_id=requirement_id,
+                                                                   is_deleted=False)
+
+        if type_id:
+            project_obj_list = project_obj_list.filter_by(type_id=type_id)
+
+        project_obj_list = project_obj_list.all()
+
+        project_list = list()
+
+        for i in project_obj_list:
+            project_list.append(i.to_dict())
+
+        return project_list
