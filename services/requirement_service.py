@@ -213,24 +213,24 @@ class RequirementProject():
         return project_list
 
     @classmethod
-    def update_project(cls, requirement_id, type_id, data_list: list):
+    def update_project(cls, requirement_id, type_id, project_list: list):
         project_obj_list = RequirementProjectModel.query.filter_by(requirement_id=requirement_id,
                                                                    is_deleted=False,
                                                                    type_id=type_id).all()
         if not project_obj_list:
-            for i in data_list:
+            for i in project_list:
                 i["requirement_id"] = requirement_id
                 i["type_id"] = type_id
-            cls.add_project(data_list)
+            cls.add_project(project_list)
 
             return
         old_id_list = [i.project_id for i in project_obj_list]
-        new_id_list = [i["project_id"] for i in data_list]
+        new_id_list = [i["project_id"] for i in project_list]
 
         id_data = query_operate_ids(old_id_list, new_id_list)
         if id_data["add_id_list"]:
             need_add_list = list()
-            for i in data_list:
+            for i in project_list:
                 if i["project_id"] in id_data["add_id_list"]:
                     i["requirement_id"] = requirement_id
                     i["type_id"] = type_id
@@ -240,7 +240,7 @@ class RequirementProject():
         if id_data["del_id_list"]:
             need_del_list = list()
             for i in project_obj_list:
-                if i.project_id in need_del_list:
+                if i.project_id in id_data["del_id_list"]:
                     need_del_list.append(i.id)
             cls.del_project(need_del_list)
 
@@ -262,7 +262,9 @@ class RequirementProject():
         # 批量软删除
         project_obj_list = RequirementProjectModel.query.filter(
             RequirementProjectModel.id.in_(id_list)
-        ).update({"is_deleted": True})
+        )
+        project_obj_list.update({"is_deleted": True}, synchronize_session=False)
+        db.session.commit()
 
         return
 
