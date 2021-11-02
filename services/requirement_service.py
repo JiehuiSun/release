@@ -251,6 +251,7 @@ class RequirementProject():
     def add_project(cls, data_list: list):
         # 批量添加
         for i in data_list:
+            i["is_auto_deploy"] = True if i.get("is_auto_deploy") else False
             o = RequirementProjectModel(**i)
             db.session.add(o)
         db.session.commit()
