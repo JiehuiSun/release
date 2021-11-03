@@ -72,13 +72,15 @@ class Project():
 
     @classmethod
     def list_project(cls, type_id=None, keyword=None, group_ids=None, user_ids=None,
-                     id_list=None, need_git_info=True, page_num=1, page_size=999):
+                     id_list=None, need_git_info=True, page_num=1, page_size=999, group_id=None):
         """
         项目列表
         """
         project_obj_list = ProjectModel.query.filter_by(is_deleted=False)
         if type_id:
             project_obj_list = project_obj_list.filter_by(type_id=type_id)
+        if group_id:
+            group_ids = str(group_id)
         if keyword:
             project_obj_list = project_obj_list.filter(ProjectModel.name.like(f"%{keyword}%"))
         if group_ids:

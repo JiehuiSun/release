@@ -332,11 +332,14 @@ class RequirementStatusFlow():
         """
         TODO 为便于扩展, 应该循环状态流取状态节点，利用一样状态流的展示取下一个
         """
+
+        """
+        # TODO 临时不用真实流程
         i = dict()
-        if not status_code:
+        if not status_code or status_code in (0, 2):
             i["next_status_code"] = 1
             i["next_status_name"] = "立项"
-        elif status_code in (1, 2):
+        elif status_code == 1:
             i["next_status_code"] = 401
             i["next_status_name"] = "进入开发"
 
@@ -354,6 +357,24 @@ class RequirementStatusFlow():
                 i["next_status_name"] = dict(REQUIREMENT_FLOW_NEXT_DICT)[i["next_status_code"]]
                 return i
         return i
+        """
+        i = dict()
+        if not status_code or status_code in (0, 2):
+            i["next_status_code"] = 1
+            i["next_status_name"] = "立项"
+        elif status_code == 1:
+            i["next_status_code"] = 402
+            i["next_status_name"] = "进入开发"
+        elif status_code == 402:
+            i["next_status_code"] = 602
+            i["next_status_name"] = "提测"
+        elif status_code == 602:
+            i["next_status_code"] = 888
+            i["next_status_name"] = "上线"
+        elif status_code == 888:
+            i["next_status_code"] = 888
+            i["next_status_name"] = "上线完成"
+
 
 
 class RequirementStatus():
