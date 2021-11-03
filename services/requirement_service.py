@@ -365,16 +365,17 @@ class RequirementStatusFlow():
         elif status_code == 1:
             i["next_status_code"] = 402
             i["next_status_name"] = "进入开发"
-        elif status_code == 402:
+        elif status_code < 601:
             i["next_status_code"] = 602
             i["next_status_name"] = "提测"
-        elif status_code == 602:
+        elif status_code < 801:
             i["next_status_code"] = 888
             i["next_status_name"] = "上线"
         elif status_code == 888:
             i["next_status_code"] = 888
             i["next_status_name"] = "上线完成"
 
+        return i
 
 
 class RequirementStatus():
