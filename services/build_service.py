@@ -12,7 +12,7 @@ from .project_service import Project
 from .user_service import User
 from .gitlab_service import GitLab
 from . import handle_page, gen_version_num
-from utils.time_utils import str2tsp
+from utils.time_utils import str2tsp, datetime_2_str_by_format
 
 
 class Build():
@@ -34,7 +34,8 @@ class Build():
         """
         project_params = {
             "page_num": page_num,
-            "page_size": page_size
+            "page_size": page_size,
+            "is_base": True,
         }
         if keyword:
             project_params["keyword"] = keyword
@@ -76,7 +77,7 @@ class Build():
                 "version_num": i.version_num,
                 "creator": i.creator,
                 "last_status": i.status,
-                "dt_last_submit": i.dt_created,
+                "dt_last_submit": datetime_2_str_by_format(i.dt_created),
                 "last_duration": (i.dt_updated - i.dt_created).seconds
             }
             build_dict_list[i.project_id] = build_dict
