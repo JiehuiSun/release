@@ -10,7 +10,7 @@ from .views.project_views import ProjectView
 from .views.requirement_views import (RequirementViews, RequirementGroupViews,
                                       RequirementCodeViews, RequirementProjectViews)
 from .views.submit_views import SubmitProjectView
-from .views.build_views import BuildProjectView, BuildLogView
+from .views.build_views import BuildProjectView, BuildLogView, BuildConsoleLogView
 from .views.gitlab_views import BranchView, SyncProjectView
 
 
@@ -40,6 +40,7 @@ v1_routing_dict["submit_project"] = SubmitProjectView
 # build
 v1_routing_dict["build_project"] = BuildProjectView
 v1_routing_dict["build_log"] = BuildLogView
+v1_routing_dict["build_console_log"] = BuildConsoleLogView
 
 # gitlab
 v1_routing_dict["gitlab/branch"] = BranchView

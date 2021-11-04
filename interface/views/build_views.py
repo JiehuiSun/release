@@ -96,3 +96,23 @@ class BuildLogView(Api):
             return self.ret(errcode=100000, errmsg=str(e))
 
         return self.ret()
+
+
+class BuildConsoleLogView(Api):
+    """
+    制品日志
+    """
+    def get(self):
+        log_text = """
+            aaa
+            bbb
+            ccc
+            ddd
+            eee
+            """
+        ret = {
+            "log_text": log_text,
+            "is_end": 1
+        }
+
+        return self.ret(data=ret)
