@@ -133,7 +133,7 @@ class BuildLog():
     def list_build_log(cls, project_id, status_id=None, env=None,
                        page_num=1, page_size=999):
         log_obj_list = BuildLogModel.query.filter_by(project_id=project_id,
-                                                     is_deleted=False)
+                                                     is_deleted=False).order_by(BuildLogModel.id.desc())
         if status_id:
             log_obj_list = log_obj_list.filter_by(status=status_id)
         if env:
