@@ -77,7 +77,7 @@ class Requirement():
 
         TODO type_id应该分几个层级，根据不同层级筛选不同节点的时间, 目前先用固定值做配置与筛选
         """
-        requirement_obj_list = RequirementModel.query.filter_by(is_deleted=False)
+        requirement_obj_list = RequirementModel.query.filter_by(is_deleted=False).order_by(RequirementModel.id.desc())
         if status_id:
             code_list = dict(REQUIREMENT_FLOW_STATUS)[int(status_id)]
             requirement_obj_list = requirement_obj_list.filter(RequirementModel.status_code.in_(code_list))
@@ -368,14 +368,20 @@ class RequirementStatusFlow():
         elif status_code < 601:
             i["next_status_code"] = 602
             i["next_status_name"] = "提测"
-        elif status_code < 801:
+        elif status_code == 602:
+            i["next_status_code"] = 604
+            i["next_status_name"] = "进入Pre环境"
+        elif status_code == 604:
+            i["next_status_code"] = 801
+            i["next_status_name"] = "申请上线"
+        elif status_code == 801:
             i["next_status_code"] = 888
             i["next_status_name"] = "上线"
         elif status_code == 888:
             i["next_status_code"] = 888
             i["next_status_name"] = "上线完成"
-
         return i
+
 
 
 class RequirementStatus():
@@ -393,15 +399,17 @@ class RequirementStatus():
             # 修改实际时间
             if status_code == 1:
                 requirement_obj.dt_started = now_dt()
-            elif status_code == 401:
+            elif status_code == 402:
                 requirement_obj.dt_deved = now_dt()
-            elif status_code == 601:
+            elif status_code == 602:
+                if not RequirementProject.list_project(requirement_id):
+                    raise ParamsError(f"请选择提测仓库")
                 requirement_obj.dt_tested = now_dt()
             elif status_code == 801:
                 requirement_obj.dt_finished = now_dt()
 
             db.session.commit()
         except Exception as e:
-            raise ParamsError(f"Update Status Err! {str(e)}")
+            raise ParamsError(f"更新状态错误! {str(e)}")
 
         return

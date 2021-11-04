@@ -104,6 +104,8 @@ class User():
         user_list = list()
         for i in user_obj_list:
             user_list.append(i.to_dict())
+        for i in user_list:
+            i["name"] = i["desc"]
 
         ret = {
             "data_list": user_list,

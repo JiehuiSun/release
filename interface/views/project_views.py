@@ -20,6 +20,7 @@ class ProjectView(Api):
             "type_id": "optional str",
             "group_ids": "optional str",
             "user_ids": "optional str",
+            "is_base": "optional str",
             "page_num": "optional str",
             "page_size": "optional str"
         }

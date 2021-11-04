@@ -72,7 +72,8 @@ class Project():
 
     @classmethod
     def list_project(cls, type_id=None, keyword=None, group_ids=None, user_ids=None,
-                     id_list=None, need_git_info=True, page_num=1, page_size=999, group_id=None):
+                     id_list=None, need_git_info=True, page_num=1, page_size=999,
+                     group_id=None, is_base=False):
         """
         项目列表
         """
@@ -102,7 +103,7 @@ class Project():
             source_project_id_list.append(i.source_project_id)
             project_list.append(i.to_dict())
 
-        if project_list and need_git_info:
+        if project_list and need_git_info or not is_base:
             # 由于同步项目写错地方了, 避免循环引用, 暂时内部引用
             from services.gitlab_service import GitLab
 
