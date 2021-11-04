@@ -5,16 +5,14 @@
 # Filename: services/build_service.py
 
 
-import time
-import datetime
-
 from base import db
 from base.errors import ParamsError
 from models.models import BuildLogModel
 from .project_service import Project
 from .user_service import User
 from .gitlab_service import GitLab
-from . import handle_page
+from . import handle_page, gen_version_num
+from utils.time_utils import str2tsp
 
 
 class Build():
@@ -169,6 +167,9 @@ class BuildLog():
                 }
             i["operator"] = user_dict
 
+            i["duration"] = str2tsp(i["dt_updated"]) - str2tsp(i["dt_created"])
+            i["fetch_duration"] = str2tsp(i["dt_updated"]) - str2tsp(i["dt_created"])
+
         ret = {
             "data_list": log_list,
             "count": count
@@ -185,7 +186,8 @@ class BuildLog():
         name = project_dict["name"]
 
         name = name.replace(" ", "_")
-        tar_file_name = f"{name}_{str(datetime.datetime.now()).split()[0]}_{str(int(time.time()))[5:]}"
+        log_count = BuildLogModel.query.filter_by(project_id=project_id).count()
+        tar_file_name = gen_version_num(name, log_count, env, branch)
 
         build_log_dict = {
             "version_num": tar_file_name,
