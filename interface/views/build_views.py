@@ -110,9 +110,18 @@ class BuildConsoleLogView(Api):
             ddd
             eee
             """
+        commit_list = [
+            "feat(aaa): Commit Info111",
+            "feat(bbb): Commit Info222",
+        ]
         ret = {
             "log_text": log_text,
-            "is_end": 1
+            "is_not_finished": 0,
+            "commit_list": commit_list,
+            "version_num": "111-2124142124",
+            "dt_created": "2021-10-10 02:02:01",
+            "duration": 66,
+            "operator_name": "操作人1",
         }
 
         return self.ret(data=ret)

@@ -187,12 +187,13 @@ class BuildLog():
         name = project_dict["name"]
 
         name = name.replace(" ", "_")
-        log_count = BuildLogModel.query.filter_by(project_id=project_id).count()
-        tar_file_name = gen_version_num(name, log_count, env, branch)
+        log_count = BuildLogModel.query.filter_by(project_id=project_id,
+                                                  branch=branch).count()
+        tar_file_name = gen_version_num(name, log_count+1, env, branch)
 
         build_log_dict = {
             "version_num": tar_file_name,
-            "title": f"{name} Build",
+            "title": f"#{log_count+1}_【{branch}】",
             "env": env,
             "project_id": project_id,
             "branch": branch,
