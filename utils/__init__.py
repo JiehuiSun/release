@@ -4,6 +4,7 @@ import mimetypes
 import requests
 import threading
 import pymysql
+from threading import Thread
 from flask import current_app
 from flask_mail import Message
 
@@ -203,3 +204,10 @@ def query_operate_ids(old_id_list, new_id_list):
     add_id_list = set(new_id_list).difference(set(old_id_list))
     del_id_list = set(old_id_list).difference(set(new_id_list))
     return {'add_id_list': list(add_id_list), 'del_id_list': list(del_id_list)}
+
+
+def async_func(f):
+    def wrapper(*args, **kwargs):
+        thr = Thread(target=f, args=args, kwargs=kwargs)
+        thr.start()
+    return wrapper

@@ -13,6 +13,9 @@ from .user_service import User
 from .gitlab_service import GitLab
 from . import handle_page, gen_version_num
 from utils.time_utils import str2tsp, datetime_2_str_by_format
+from utils import async_func
+
+
 
 
 class Build():
@@ -216,14 +219,29 @@ class BuildLog():
         db.session.commit()
 
         try:
-            tar_file_dict = GitLab.clone_project(name, tar_file_name, source_project_id, branch)
+            params_d = {
+                "build_obj": build_obj,
+                "name": name,
+                "tar_file_name": tar_file_name,
+                "source_project_id": source_project_id,
+                "branch": branch,
+            }
+            cls.async_clone_project(**params_d)
         except Exception as e:
             build_obj.status = 3
             db.session.commit()
             raise ParamsError(f"Build Err! Clone Err {str(e)}")
 
-        build_obj.status = 2
-        build_obj.file_path = tar_file_dict["path"]
-        db.session.commit()
+        return build_log_dict
 
+    @classmethod
+    @async_func
+    def async_clone_project(cls, build_obj, name, tar_file_name, source_project_id, branch):
+        from base import db
+        from application import app
+        with app.app_context():
+            tar_file_dict = GitLab.clone_project(name, tar_file_name, source_project_id, branch)
+            build_obj.status = 2
+            build_obj.file_path = tar_file_dict["path"]
+            db.session.commit()
         return
