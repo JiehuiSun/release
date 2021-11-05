@@ -9,7 +9,7 @@ import datetime
 
 from base import db
 from base.errors import ParamsError
-from models.models import BuildLogModel
+from models.models import BuildLogModel, SubmitLogModel
 from .project_service import Project
 from .user_service import User
 from .gitlab_service import GitLab
@@ -34,7 +34,7 @@ class Submit():
         env_id: 环境CODE
         时间筛选待确定
         """
-        log_obj_list = BuildLogModel.query.filter_by(is_deleted=False)
+        log_obj_list = SubmitLogModel.query.filter_by(is_deleted=False)
         if user_id:
             log_obj_list = log_obj_list.filter_by(creator=user_id)
         if type_id:

@@ -51,6 +51,11 @@ class BuildLogView(Api):
             "project_id": "required str",
             "status_id": "optional str",
             "env": "optional str",
+            "type_id": "optional str",
+            "group_id": "optional str",
+            "page_num": "optional str",
+            "page_size": "optional str",
+            "branch": "optional str",
         }
 
         self.ver_params()

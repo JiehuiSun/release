@@ -21,7 +21,9 @@ class SubmitProjectView(Api):
             "group_id": "optional str",
             "env": "optional str",
             "page_num": "optional str",
-            "page_size": "optional str"
+            "page_size": "optional str",
+            "project_id": "optional str",
+            "branch": "optional str",
         }
 
         self.ver_params()

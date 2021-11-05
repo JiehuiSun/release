@@ -131,13 +131,20 @@ class BuildLog():
     """
     @classmethod
     def list_build_log(cls, project_id, status_id=None, env=None,
-                       page_num=1, page_size=999):
+                       page_num=1, page_size=999, type_id=None,
+                       group_id=None, branch=None):
         log_obj_list = BuildLogModel.query.filter_by(project_id=project_id,
                                                      is_deleted=False).order_by(BuildLogModel.id.desc())
         if status_id:
             log_obj_list = log_obj_list.filter_by(status=status_id)
         if env:
             log_obj_list = log_obj_list.filter_by(env=env)
+        if branch:
+            log_obj_list = log_obj_list.filter_by(branch=branch)
+        if group_id:
+            log_obj_list = log_obj_list.filter_by(group_id=group_id)
+        if type_id:
+            log_obj_list = log_obj_list.filter_by(type_id=type_id)
 
         count = log_obj_list.count()
         log_obj_list = handle_page(log_obj_list, page_num, page_size)
