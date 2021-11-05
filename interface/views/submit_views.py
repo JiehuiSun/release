@@ -50,4 +50,9 @@ class SubmitProjectView(Api):
 
         self.ver_params()
 
+        # TODO 交付
+
+        # 记录
+        Submit.add_submit(**self.data)
+
         return self.ret()

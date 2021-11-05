@@ -245,9 +245,33 @@ class SubmitLogModel(db.Model):
     build_type = db.Column(db.Integer, nullable=False, comment="类型: 1 手动, 2 自动")
     submit_id = db.Column(db.Integer, nullable=True, comment="提交ID(关联DevUserModel)")
     file_path = db.Column(db.String(256), nullable=True, comment="tar包路径")
+    type_id = db.Column(db.Integer, nullable=True, comment="类型: 10 后端,20 前端, 90 其他")
+    group_id = db.Column(db.Integer, nullable=True, comment="组ID")
+    count = db.Column(db.Integer, nullable=True, default=1, comment="组ID")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
+
+    def to_dict(self):
+        ret_dict = {}
+        for k in self.__table__.columns:
+            if k.name == "is_deleted":
+                continue
+            value = getattr(self, k.name)
+            if isinstance(value, datetime.datetime):
+                value = value.strftime('%Y-%m-%d %H:%M:%S')
+            elif k.name == "status":
+                if value is None:
+                    ret_dict["status"] = dict()
+                else:
+                    status_dict = {
+                        "code": value,
+                        "value": dict(LOG_STATUS)[value]
+                    }
+                    ret_dict["status"] = status_dict
+                continue
+            ret_dict[k.name] = value
+        return ret_dict
 
 
 class BuildLogModel(db.Model):
@@ -406,7 +430,7 @@ class RequirementProjectModel(db.Model):
     dt_started = db.Column(db.DateTime, nullable=True, comment="开始时间")
     dt_finished = db.Column(db.DateTime, nullable=True, comment="完成时间")
     is_auto_deploy = db.Column(db.Boolean, default=False, comment="是否自动部署")
-    comment = db.Column(db.Text, nullable=False, comment="备注")
+    comment = db.Column(db.String(128), nullable=False, comment="备注")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)

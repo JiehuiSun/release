@@ -96,11 +96,11 @@ class BuildLogView(Api):
         """
 
         try:
-            BuildLog.add_build_log(**self.data)
+            build_log_id = BuildLog.add_build_log(**self.data)
         except Exception as e:
             return self.ret(errcode=100000, errmsg=str(e))
 
-        return self.ret()
+        return self.ret(data={"id": build_log_id})
 
 
 class BuildConsoleLogView(Api):

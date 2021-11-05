@@ -77,7 +77,7 @@ class Build():
                 continue
 
             build_dict = {
-                "version_num": i.version_num,
+                "version_num": i.title,
                 "creator": i.creator,
                 "last_status": i.status,
                 "dt_last_submit": datetime_2_str_by_format(i.dt_created),
@@ -218,9 +218,10 @@ class BuildLog():
         db.session.add(build_obj)
         db.session.commit()
 
+        build_id = build_obj.id
         try:
             params_d = {
-                "build_obj": build_obj,
+                "build_log_id": build_id,
                 "name": name,
                 "tar_file_name": tar_file_name,
                 "source_project_id": source_project_id,
@@ -228,18 +229,20 @@ class BuildLog():
             }
             cls.async_clone_project(**params_d)
         except Exception as e:
+            build_obj = BuildLogModel.query.get(build_log_id)
             build_obj.status = 3
             db.session.commit()
             raise ParamsError(f"Build Err! Clone Err {str(e)}")
 
-        return build_log_dict
+        return build_obj.id
 
     @classmethod
     @async_func
-    def async_clone_project(cls, build_obj, name, tar_file_name, source_project_id, branch):
+    def async_clone_project(cls, build_log_id, name, tar_file_name, source_project_id, branch):
         from base import db
         from application import app
         with app.app_context():
+            build_obj = BuildLogModel.query.get(build_log_id)
             tar_file_dict = GitLab.clone_project(name, tar_file_name, source_project_id, branch)
             build_obj.status = 2
             build_obj.file_path = tar_file_dict["path"]

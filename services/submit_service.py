@@ -106,4 +106,30 @@ class Submit():
 
     @classmethod
     def add_submit(cls, log_id):
+        try:
+            build_obj = BuildLogModel.query.get(log_id)
+        except Exception as e:
+            raise ParamsError("交付失败, 制品ID错误或已被删除")
+
+        s_params = {
+            "version_num": build_obj.version_num,
+            "title": build_obj.title,
+            "desc": build_obj.desc,
+            "env": build_obj.env,
+            "project_id": build_obj.project_id,
+            "branch": build_obj.branch,
+            "commit_hash": build_obj.commit_hash,
+            "status": 1,
+            "creator": build_obj.creator,
+            "build_type": build_obj.build_type,
+            "file_path": build_obj.file_path,
+            "submit_id": build_obj.submit_id,
+            "group_id": build_obj.group_id,
+            "type_id": build_obj.type_id,
+        }
+
+        submit_log_obj = SubmitLogModel(**s_params)
+        db.session.add(submit_log_obj)
+        db.session.commit()
+
         return
