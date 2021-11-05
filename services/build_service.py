@@ -229,7 +229,7 @@ class BuildLog():
             }
             cls.async_clone_project(**params_d)
         except Exception as e:
-            build_obj = BuildLogModel.query.get(build_log_id)
+            build_obj = BuildLogModel.query.get(build_id)
             build_obj.status = 3
             db.session.commit()
             raise ParamsError(f"Build Err! Clone Err {str(e)}")

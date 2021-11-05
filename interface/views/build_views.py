@@ -127,6 +127,7 @@ class BuildConsoleLogView(Api):
             "dt_created": "2021-10-10 02:02:01",
             "duration": 66,
             "operator_name": "操作人1",
+            "download_url": "/api/interface/v1/utils/download/?file=RedBull/26-pro-2021110506822(RedBull-master).tar.gz"
         }
 
         return self.ret(data=ret)

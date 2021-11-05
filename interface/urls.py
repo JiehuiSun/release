@@ -12,6 +12,7 @@ from .views.requirement_views import (RequirementViews, RequirementGroupViews,
 from .views.submit_views import SubmitProjectView
 from .views.build_views import BuildProjectView, BuildLogView, BuildConsoleLogView
 from .views.gitlab_views import BranchView, SyncProjectView
+from .views.utils_views import DownLoadView
 
 
 MODEL_NAME = "interface"
@@ -45,6 +46,9 @@ v1_routing_dict["build_console_log"] = BuildConsoleLogView
 # gitlab
 v1_routing_dict["gitlab/branch"] = BranchView
 v1_routing_dict["gitlab/sync_project"] = SyncProjectView
+
+# utils
+v1_routing_dict["utils/download"] = DownLoadView
 
 
 for k, v in v1_routing_dict.items():
