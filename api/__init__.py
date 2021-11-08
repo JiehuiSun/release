@@ -111,7 +111,10 @@ class Api(VerParams, Resp, View):
                 "errmsg": errors.BaseError.errmsg,
                 "data": {}
             }
-        return jsonify(result)
+        if isinstance(result, dict):
+            return jsonify(result)
+        else:
+            return result
 
     def __get_subpath(self, path):
         tail_slash = ''

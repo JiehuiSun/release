@@ -8,6 +8,7 @@
 from flask import make_response, send_file, current_app
 
 from api import Api
+from base.errors import ParamsError
 
 
 class DownLoadView(Api):
@@ -25,8 +26,9 @@ class DownLoadView(Api):
         file_name = f"{repository_dir}/{file_name}"
         try:
             resp = make_response(send_file(file_name))
+            resp.headers["Content-Disposition"] = f'attachment; filename={file_name.split("/")[-1]}'
+            resp.headers['Content-Type'] = 'application/zip'
         except Exception as e:
             print(str(e))
-        resp.headers["Content-Disposition"] = f'attachment; filename={file_name.split("/")[-1]}'
-        resp.headers['Content-Type'] = 'application/zip'
+            raise ParamsError(f"文件下载失败, {str(e)}")
         return resp
