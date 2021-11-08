@@ -214,7 +214,10 @@ class BuildLog():
 
         # 获取上次commit
         try:
-            last_commit = BuildLogModel.query.order_by(BuildLogModel.id.desc()).limit(1).commit_hash
+            last_commit = BuildLogModel.query \
+                .filter_by(project_id=project_id,
+                           branch=branch) \
+                .order_by(BuildLogModel.id.desc()).limit(1).commit_hash
         except Exception as e:
             last_commit = ""
 
