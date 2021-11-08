@@ -195,15 +195,15 @@ class BuildLog():
     def add_build_log(cls, project_id, branch, env, commit_id=None):
         project_dict = Project.query_project(project_id, False)
 
+        source_project_id = project_dict["source_project_id"]
         if not commit_id:
-            commit_id = GitLab.query_commit(project_id, branch)
+            commit_id = GitLab.query_commit(source_project_id, branch)
             if commit_id:
                 commit_id = commit_id["id"]
         else:
             # TODO 如果打包最小单元是commit则需要根据commit处理
             pass
 
-        source_project_id = project_dict["source_project_id"]
         http_url = project_dict["http_url"]
         name = project_dict["name"]
 
@@ -219,7 +219,7 @@ class BuildLog():
             last_commit = ""
 
         commit_text = ""
-        new_commit_list = GitLab.list_commit(project_id, branch)
+        new_commit_list = GitLab.list_commit(source_project_id, branch)
         for i in new_commit_list:
             if i.id == last_commit:
                 break
@@ -272,8 +272,6 @@ class BuildLog():
                 e.write(f">>: Build Error: {str(e)}\n")
             raise ParamsError(f"Build Err! Clone Err {str(e)}")
 
-        with open(log_file, "a") as e:
-            e.write(f">>: Success!!!\n")
         return build_obj.id
 
     @classmethod
