@@ -34,7 +34,8 @@ class Submit():
         env_id: 环境CODE
         时间筛选待确定
         """
-        log_obj_list = SubmitLogModel.query.filter_by(is_deleted=False)
+        log_obj_list = SubmitLogModel.query.filter_by(is_deleted=False) \
+            .order_by(SubmitLogModel.id.desc())
         if user_id:
             log_obj_list = log_obj_list.filter_by(creator=user_id)
         if type_id:

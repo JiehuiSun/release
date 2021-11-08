@@ -76,7 +76,7 @@ class Build():
         build_dict_list = dict()
         need_user_id_list = list()
         for i in build_obj_list:
-            if build_dict_list:
+            if i.project_id in build_dict_list:
                 continue
 
             build_dict = {
