@@ -8,6 +8,7 @@
 from base import db
 from models.models import DevUserModel, GroupModel, UserGroupModel
 from . import handle_page
+from base.errors import ParamsError
 
 
 class Group():
@@ -113,3 +114,12 @@ class User():
         }
 
         return ret
+
+    @classmethod
+    def query_user(cls, user_id):
+        try:
+            user_obj = DevUserModel.query.get(user_id)
+        except Exception as e:
+            raise ParamsError("用户查询失败, id: user_id")
+
+        return user_obj.to_dict()

@@ -108,26 +108,9 @@ class BuildConsoleLogView(Api):
     制品日志
     """
     def get(self):
-        log_text = """
-            aaa
-            bbb
-            ccc
-            ddd
-            eee
-            """
-        commit_list = [
-            "feat(aaa): Commit Info111",
-            "feat(bbb): Commit Info222",
-        ]
-        ret = {
-            "log_text": log_text,
-            "is_not_finished": 0,
-            "commit_list": commit_list,
-            "version_num": "111-2124142124",
-            "dt_created": "2021-10-10 02:02:01",
-            "duration": 66,
-            "operator_name": "操作人1",
-            "download_url": "http://192.168.11.8:8008/api/interface/v1/utils/download/?file=HYLand_P/11-test-2021110507206(HYLand_P-release_v1.0.12).tar.gz"
-        }
+        try:
+            build_log = BuildLog.query_log(self.key)
+        except Exception as e:
+            return self.ret(errcode=100000, errmsg=str(e))
 
-        return self.ret(data=ret)
+        return self.ret(data=build_log)

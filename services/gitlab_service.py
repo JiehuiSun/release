@@ -83,10 +83,14 @@ class GitLab():
         return
 
     @classmethod
-    def clone_project(cls, name, tar_file_name, project_id, branch="master"):
+    def clone_project(cls, name, tar_file_name, project_id, branch="master", log_file=None):
         """
         同步项目，如果开通其他来源的项目，需以source_id区分处理
         """
+        if not log_file:
+            log_file = f"./{tar_file_name}.log"
+        with open(log_file, "a") as e:
+            e.write("Handle dir \n")
         repository_dir = current_app.config["REPOSITORY_DIR"]
         pro_dir = f"{repository_dir}/{name}"
         if not os.path.exists(pro_dir):
@@ -96,17 +100,26 @@ class GitLab():
         if os.path.exists(tmp_dir):
             shutil.rmtree(tmp_dir)
 
+        with open(log_file, "a") as e:
+            e.write("git pull project..\n")
+
         try:
             project = cls.gitlab().projects.get(project_id)
             tgz = project.repository_archive(branch)
         except Exception as e:
             # TODO 日志
+            with open(log_file, "a") as e:
+                e.write(">>: Error: pull project error..\n\n")
             raise InvalidArgsError(f"Clone Err! {str(e)}")
 
+        with open(log_file, "a") as e:
+            e.write("generate 'tar.gz' file..\n")
         tar_file_path = f"{pro_dir}/{tar_file_name}.tar.gz"
         with open(tar_file_path, "wb") as t:
             t.write(tgz)
 
+        with open(log_file, "a") as e:
+            e.write(f"tar file ok. {tar_file_path}\n")
         if os.path.exists(tmp_dir):
             shutil.rmtree(tmp_dir)
 
@@ -139,3 +152,22 @@ class GitLab():
         except Exception as e:
             raise InvalidArgsError(f"Get Project Err! GitLab Config Err. {str(e)}")
         return project
+
+    @classmethod
+    def list_commit(cls, project_id, branch):
+        """
+        根据项目跟分支获取分支的commit最新列表
+        """
+        project = cls.get_project(project_id)
+        commits = project.commits.list(ref_name=branch, page=0, per_page=20)
+
+        return commits
+
+    @classmethod
+    def query_commit(cls, project_id, branch):
+        """
+        根据项目跟分支获取最新的commit信息
+        """
+        project = cls.get_project(project_id)
+        branch = project.branches.get(branch)
+        return branch.commit

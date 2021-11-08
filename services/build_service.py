@@ -5,6 +5,9 @@
 # Filename: services/build_service.py
 
 
+import os
+
+from flask import current_app
 from base import db
 from base.errors import ParamsError
 from models.models import BuildLogModel
@@ -12,7 +15,7 @@ from .project_service import Project
 from .user_service import User
 from .gitlab_service import GitLab
 from . import handle_page, gen_version_num
-from utils.time_utils import str2tsp, datetime_2_str_by_format
+from utils.time_utils import str2tsp, datetime_2_str_by_format, dt2ts
 from utils import async_func
 
 
@@ -68,7 +71,7 @@ class Build():
             build_obj_list = build_obj_list.filter_by(env=env)
 
         # TODO 正常只取以project_id分组的最新一条即可
-        build_obj_list = build_obj_list.all()
+        build_obj_list = build_obj_list.order_by(BuildLogModel.dt_created.desc()).all()
 
         build_dict_list = dict()
         need_user_id_list = list()
@@ -192,6 +195,14 @@ class BuildLog():
     def add_build_log(cls, project_id, branch, env, commit_id=None):
         project_dict = Project.query_project(project_id, False)
 
+        if not commit_id:
+            commit_id = GitLab.query_commit(project_id, branch)
+            if commit_id:
+                commit_id = commit_id["id"]
+        else:
+            # TODO 如果打包最小单元是commit则需要根据commit处理
+            pass
+
         source_project_id = project_dict["source_project_id"]
         http_url = project_dict["http_url"]
         name = project_dict["name"]
@@ -201,9 +212,22 @@ class BuildLog():
                                                   branch=branch).count()
         tar_file_name = gen_version_num(name, log_count+1, env, branch)
 
+        # 获取上次commit
+        try:
+            last_commit = BuildLogModel.query.order_by(BuildLogModel.id.desc()).limit(1).commit_hash
+        except Exception as e:
+            last_commit = ""
+
+        commit_text = ""
+        new_commit_list = GitLab.list_commit(project_id, branch)
+        for i in new_commit_list:
+            if i.id == last_commit:
+                break
+            commit_text += f"{i.title}\n"
+
         build_log_dict = {
             "version_num": tar_file_name,
-            "title": f"#{log_count+1}_【{branch}】",
+            "title": f"#{log_count+1} 【{branch}】",
             "env": env,
             "project_id": project_id,
             "branch": branch,
@@ -213,10 +237,21 @@ class BuildLog():
             "build_type": 1,
             "type_id": project_dict["type_id"],
             "group_id": project_dict["group_id"],
+            "commit_text": commit_text,
+            "log_text": ">>: Ready for work.."
         }
         build_obj = BuildLogModel(**build_log_dict)
         db.session.add(build_obj)
         db.session.commit()
+
+        repository_dir = current_app.config["REPOSITORY_DIR"]
+        pro_dir = f"{repository_dir}/logs"
+        if not os.path.exists(pro_dir):
+            os.mkdir(pro_dir)
+
+        log_file = f"{pro_dir}/{build_log_dict['version_num']}.log"
+        with open(log_file, "w") as e:
+            e.write(">>: Ready for work.. \n\n")
 
         build_id = build_obj.id
         try:
@@ -226,25 +261,87 @@ class BuildLog():
                 "tar_file_name": tar_file_name,
                 "source_project_id": source_project_id,
                 "branch": branch,
+                "log_file": log_file
             }
             cls.async_clone_project(**params_d)
         except Exception as e:
             build_obj = BuildLogModel.query.get(build_id)
             build_obj.status = 3
             db.session.commit()
+            with open(log_file, "a") as e:
+                e.write(f">>: Build Error: {str(e)}\n")
             raise ParamsError(f"Build Err! Clone Err {str(e)}")
 
+        with open(log_file, "a") as e:
+            e.write(f">>: Success!!!\n")
         return build_obj.id
 
     @classmethod
     @async_func
-    def async_clone_project(cls, build_log_id, name, tar_file_name, source_project_id, branch):
+    def async_clone_project(cls, build_log_id, name, tar_file_name, source_project_id,
+                            branch, log_file):
         from base import db
         from application import app
         with app.app_context():
-            build_obj = BuildLogModel.query.get(build_log_id)
-            tar_file_dict = GitLab.clone_project(name, tar_file_name, source_project_id, branch)
+            with open(log_file, "a") as e:
+                e.write(f">>: Query Build Info ..\n")
+                build_obj = BuildLogModel.query.get(build_log_id)
+                e.write(f">>: Clone Project Start..\n")
+                tar_file_dict = GitLab.clone_project(name, tar_file_name, source_project_id, branch, log_file)
+                e.write(f">>: Clone Project End..\n")
+                e.write(f">>: Build Success! \n tar file name is {tar_file_name}\n\n")
+                e.write(f">>: log file name is {log_file}\n\n")
+                e.write(f"Success!!!\n")
+
+            with open(log_file, "r") as e:
+                build_obj.log_text = e.read()
             build_obj.status = 2
             build_obj.file_path = tar_file_dict["path"]
+            # query log
             db.session.commit()
         return
+
+    @classmethod
+    def query_log(cls, log_id):
+        try:
+            log_obj = BuildLogModel.query.get(log_id)
+        except Exception as e:
+            raise ParamsError(f"日志错误, {str(e)}")
+
+        if log_obj.status in (2, 3):
+            is_not_finished = 0
+            log_text = log_obj.log_text
+        else:
+            is_not_finished = 1
+            try:
+                repository_dir = current_app.config["REPOSITORY_DIR"]
+                log_file = f"{repository_dir}/logs/{log_obj.version_num}.log"
+                with open(log_file) as e:
+                    log_text = e.read()
+            except Exception as e:
+                raise ParamsError(f"log err {str(e)}")
+
+        # down
+        h = current_app.config["DOWNLOAD_HOST"]
+        a = "/api/interface/v1/utils/download/"
+        p = log_obj.file_path
+
+        # user
+        try:
+            user_dict = User.query_user(log_obj.creator)
+            user_name = user_dict["name"]
+        except:
+            user_name = "未知用户"
+
+        ret = {
+            "log_text": log_text,
+            "is_not_finished": is_not_finished,
+            "commit_list": log_obj.commit_text.splitlines(),
+            "version_num": log_obj.title,
+            "dt_created": datetime_2_str_by_format(log_obj.dt_created),
+            "duration": dt2ts(log_obj.dt_updated) - dt2ts(log_obj.dt_created),
+            "operator_name": user_name,
+            "download_url": f"{h}{a}{p}"
+        }
+
+        return ret

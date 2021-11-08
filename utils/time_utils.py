@@ -24,3 +24,4 @@ def datetime_2_str_by_format(dt, dt_format='%Y-%m-%d %H:%M:%S'):
 str2tsp = lambda s: int(time.mktime(time.strptime(s, "%Y-%m-%d %H:%M:%S")))
 tsp2str = lambda s: time.strptime("%Y-%m-%d %H:%M:%S", time.localtime(s))
 tsp2dt = lambda s: datetime.fromtimestamp(s)
+dt2ts = lambda s: time.mktime(s.timetuple())
