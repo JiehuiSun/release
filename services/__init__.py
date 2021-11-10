@@ -34,7 +34,7 @@ def gen_version_num(name, count_num, env, branch):
     """
     生成版本号
     """
-    version_num = "{0}-{1}-{2}{3}({4}-{5})".format(
+    version_num = "{0}-{1}-{2}{3}-{4}-{5}".format(
         count_num,
         env,
         str(datetime.datetime.now()).split()[0].replace("-", ""),

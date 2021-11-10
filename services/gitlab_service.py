@@ -83,9 +83,10 @@ class GitLab():
         return
 
     @classmethod
-    def clone_project(cls, name, tar_file_name, project_id, branch="master", log_file=None):
+    def clone_project(cls, name, tar_file_name, project_id, branch="master", log_file=None, job_type=None, env="dev"):
         """
         同步项目，如果开通其他来源的项目，需以source_id区分处理
+        直接打好包
         """
         if not log_file:
             log_file = f"./{tar_file_name}.log"
@@ -96,16 +97,29 @@ class GitLab():
         if not os.path.exists(pro_dir):
             os.mkdir(pro_dir)
 
+        # TODO
         tmp_dir = f"{pro_dir}/{name}"
-        if os.path.exists(tmp_dir):
-            shutil.rmtree(tmp_dir)
+        # if os.path.exists(tmp_dir):
+            # shutil.rmtree(tmp_dir)
 
         with open(log_file, "a") as e:
             e.write("git pull project..\n")
 
         try:
-            project = cls.gitlab().projects.get(project_id)
-            tgz = project.repository_archive(branch)
+            t_name = f"pack_{job_type.lower()}"
+            base_file = f"./base/pack_scripts/{t_name}.sh"
+            if not os.path.isfile(base_file):
+                raise InvalidArgsError("没有打包脚本")
+            base_file = os.path.abspath(base_file)
+
+            pack_func = getattr(cls, t_name)
+            if not pack_func:
+                raise InvalidArgsError("项目语言脚本配置异常, 请检查项目及脚本配置以及打包入口")
+
+            # commit v2
+            tgz = pack_func(project_id, branch, base_file, pro_dir, log_file, env, commit=None)
+            # project = cls.gitlab().projects.get(project_id)
+            # tgz = project.repository_archive(branch)
         except Exception as e:
             # TODO 日志
             with open(log_file, "a") as e:
@@ -171,3 +185,48 @@ class GitLab():
         project = cls.get_project(project_id)
         branch = project.branches.get(branch)
         return branch.commit
+
+    @classmethod
+    def pack_python(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):
+        project = cls.gitlab().projects.get(project_id)
+        tgz = project.repository_archive(branch)
+
+        return tgz
+
+    @classmethod
+    def pack_java(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):
+        return
+
+    @classmethod
+    def pack_php(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):
+        project = cls.gitlab().projects.get(project_id)
+        tgz = project.repository_archive(branch)
+
+        return tgz
+
+    @classmethod
+    def pack_go(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):
+        return
+
+    @classmethod
+    def pack_web(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):
+        """
+        TODO 默认配置使用bash, 项目配置使用text的shell, 后期做兼容.
+        """
+        project = cls.gitlab().projects.get(project_id)
+        p_local_path = f"{pro_dir}/{project.name}"
+        # log_file = rf"{log_file}"
+        print("A" * 40)
+        print(log_file)
+        if not os.path.exists(p_local_path):
+            clone_cmd = f"git clone {project.http_url_to_repo} {p_local_path}"
+            os.system(f"{clone_cmd} >> {log_file}")
+            print("B" * 40)
+
+        print("C" * 40)
+        os.system(f"cd {p_local_path} >> {log_file} 2>&1 && git checkout {branch} >> {log_file} 2>&1 && git pull origin {branch} >> {log_file} 2>&1 &&/bin/bash {base_file} {env} >> {log_file} 2>&1")
+        # print("D" * 40)
+        # os.system(f"/bin/bash {base_file} {env} >> {log_file}")
+        print("Z" * 40)
+
+        return

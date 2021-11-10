@@ -76,7 +76,7 @@ class Submit():
         user_dict_list = {
             0: {
                 "id": 0,
-                "name": "未知用户"
+                "name": "未知"
             }
         }
         for i in user_data["data_list"]:

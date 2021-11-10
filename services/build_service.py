@@ -121,7 +121,7 @@ class Build():
             # 用户不存在或已被删除
             i["operator"] = {
                 "id": 0,
-                "name": "未知用户"
+                "name": "未知"
             }
 
         ret = {
@@ -177,7 +177,7 @@ class BuildLog():
             if not user_dict:
                 user_dict = {
                     "id": 0,
-                    "name": "未知用户"
+                    "name": "未知"
                 }
             i["operator"] = user_dict
 
@@ -194,6 +194,13 @@ class BuildLog():
     @classmethod
     def add_build_log(cls, project_id, branch, env, commit_id=None):
         project_dict = Project.query_project(project_id, False)
+        try:
+            job_type = project_dict["job"]["name"]
+        except:
+            raise ParamsError(f"{project_dict['name']}项目未设置编程语言")
+
+        if not os.path.isfile(f"./base/pack_scripts/pack_{job_type.lower()}.sh"):
+            raise ParamsError(f"项目的脚本配置错误.")
 
         source_project_id = project_dict["source_project_id"]
         if not commit_id:
@@ -264,42 +271,52 @@ class BuildLog():
                 "tar_file_name": tar_file_name,
                 "source_project_id": source_project_id,
                 "branch": branch,
-                "log_file": log_file
+                "log_file": log_file,
+                "job_type": job_type,
+                "env": env
             }
             cls.async_clone_project(**params_d)
-        except Exception as e:
+        except Exception as s:
             build_obj = BuildLogModel.query.get(build_id)
             build_obj.status = 3
             db.session.commit()
             with open(log_file, "a") as e:
-                e.write(f">>: Build Error: {str(e)}\n")
-            raise ParamsError(f"Build Err! Clone Err {str(e)}")
+                e.write(f">>: Build Error: {str(s)}\n")
+            raise ParamsError(f"Build Err! Clone Err {str(s)}")
 
         return build_obj.id
 
     @classmethod
     @async_func
     def async_clone_project(cls, build_log_id, name, tar_file_name, source_project_id,
-                            branch, log_file):
-        from base import db
-        from application import app
-        with app.app_context():
-            with open(log_file, "a") as e:
-                e.write(f">>: Query Build Info ..\n")
-                build_obj = BuildLogModel.query.get(build_log_id)
-                e.write(f">>: Clone Project Start..\n")
-                tar_file_dict = GitLab.clone_project(name, tar_file_name, source_project_id, branch, log_file)
-                e.write(f">>: Clone Project End..\n")
-                e.write(f">>: Build Success! \n tar file name is {tar_file_name}\n\n")
-                e.write(f">>: log file name is {log_file}\n\n")
-                e.write(f"Success!!!\n")
+                            branch, log_file, job_type, env):
+        try:
+            from base import db
+            from application import app
+            with app.app_context():
+                with open(log_file, "a") as e:
+                    e.write(f">>: Query Build Info ..\n")
+                    build_obj = BuildLogModel.query.get(build_log_id)
+                    e.write(f">>: Clone Project Start..\n")
+                    tar_file_dict = GitLab.clone_project(name, tar_file_name, source_project_id, branch, log_file, job_type, env)
+                    e.write(f">>: Clone Project End..\n")
+                    e.write(f">>: Build Success! \n tar file name is {tar_file_name}\n\n")
+                    e.write(f">>: log file name is {log_file}\n\n")
+                    e.write(f"Success!!!\n")
 
-            with open(log_file, "r") as e:
-                build_obj.log_text = e.read()
-            build_obj.status = 2
-            build_obj.file_path = tar_file_dict["path"]
-            # query log
+                with open(log_file, "r") as e:
+                    build_obj.log_text = e.read()
+                build_obj.status = 2
+                build_obj.file_path = tar_file_dict["path"]
+                # query log
+                db.session.commit()
+        except Exception as s:
+            build_obj = BuildLogModel.query.get(build_log_id)
+            build_obj.status = 3
             db.session.commit()
+            with open(log_file, "a") as e:
+                e.write(f">>: Build Error: {str(s)}\n")
+            raise ParamsError(f"Build Err! Clone Err {str(s)}")
         return
 
     @classmethod
@@ -332,7 +349,7 @@ class BuildLog():
             user_dict = User.query_user(log_obj.creator)
             user_name = user_dict["name"]
         except:
-            user_name = "未知用户"
+            user_name = "未知"
 
         ret = {
             "log_text": log_text,

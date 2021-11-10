@@ -193,6 +193,7 @@ class ProjectModel(db.Model):
     type_id = db.Column(db.Integer, nullable=True, comment="类型: 10 后端,20 前端, 90 其他")
     source_id = db.Column(db.Integer, nullable=True, default=1, comment="来源: 1 gitlab")
     source_project_id = db.Column(db.Integer, nullable=True, comment="来源的项目ID")
+    job_id = db.Column(db.Integer, nullable=True, comment="开发语言ID(关联JOB_TYPE)")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
@@ -214,6 +215,15 @@ class ProjectModel(db.Model):
                     "name": dict(WORK_TYPE)[value]
                 }
                 ret_dict["type"] = type_dict
+            elif k.name == "job_id":
+                if not value:
+                    ret_dict["job"] = dict()
+                    continue
+                type_dict = {
+                    "id": value,
+                    "name": dict(JOB_TYPE)[value]
+                }
+                ret_dict["job"] = type_dict
             ret_dict[k.name] = value
         return ret_dict
 
