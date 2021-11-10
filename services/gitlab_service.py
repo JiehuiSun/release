@@ -129,8 +129,12 @@ class GitLab():
         with open(log_file, "a") as e:
             e.write("generate 'tar.gz' file..\n")
         tar_file_path = f"{pro_dir}/{tar_file_name}.tar.gz"
-        with open(tar_file_path, "wb") as t:
-            t.write(tgz)
+        if job_type.lower() in ("web", "java"):
+            with tarfile.open(tar_file_path, "w:gz") as tar:
+                tar.add(tar_file_path, arcname=os.path.basename(tgz))
+        else:
+            with open(tar_file_path, "wb") as t:
+                t.write(tgz)
 
         with open(log_file, "a") as e:
             e.write(f"tar file ok. {tar_file_path}\n")
@@ -215,18 +219,13 @@ class GitLab():
         """
         project = cls.gitlab().projects.get(project_id)
         p_local_path = f"{pro_dir}/{project.name}"
-        # log_file = rf"{log_file}"
-        print("A" * 40)
-        print(log_file)
         if not os.path.exists(p_local_path):
             clone_cmd = f"git clone {project.http_url_to_repo} {p_local_path}"
-            os.system(f"{clone_cmd} >> {log_file}")
-            print("B" * 40)
+            if os.system(f"{clone_cmd} >> {log_file}"):
+                raise InvalidArgsError("打包异常, 项目克隆失败")
 
-        print("C" * 40)
-        os.system(f"cd {p_local_path} >> {log_file} 2>&1 && git checkout {branch} >> {log_file} 2>&1 && git pull origin {branch} >> {log_file} 2>&1 &&/bin/bash {base_file} {env} >> {log_file} 2>&1")
-        # print("D" * 40)
-        # os.system(f"/bin/bash {base_file} {env} >> {log_file}")
-        print("Z" * 40)
+        if os.system(f"cd {p_local_path} >> {log_file} 2>&1 && git checkout {branch} >> {log_file} 2>&1 && git pull origin {branch} >> {log_file} 2>&1 &&/bin/bash {base_file} {env} >> {log_file} 2>&1"):
+            raise InvalidArgsError("打包异常, Git错误或脚本执行错误")
+        ret_dir = f"{p_local_path}/dist"
 
-        return
+        return ret_dir
