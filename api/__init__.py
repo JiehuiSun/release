@@ -7,16 +7,18 @@ from flask import request
 from flask import jsonify
 from flask import current_app
 from flask.views import View
+from flask_login import current_user
 
 from base import errors
 from base import session
+from base import redis
 
 from .req_framework import VerParams
 from .resp_framework import Resp
 
 
 class Api(VerParams, Resp, View):
-    NEED_LOGIN = False
+    NEED_LOGIN = True
 
     def __init__(self):
         self.__name__ = self.__class__.__name__
@@ -30,8 +32,7 @@ class Api(VerParams, Resp, View):
     def _identification(self):
         if self.NEED_LOGIN:
             self.token = self._get_token()
-            self.user_id = session.get_session(self.token)
-            if not self.user_id:
+            if not redis.client.get(self.token):
                 raise errors.LoginExpiredError
 
     def _handle_params(self):

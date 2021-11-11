@@ -10,6 +10,7 @@ from base import session
 from base import mail
 from base import apscheduler
 from base import tasks
+from base import ldap_manager
 from account.helpers import algorithm_auth_login
 
 
@@ -34,6 +35,7 @@ def create_app():
     config_login(app)
     config_mail(app)
     config_apscheduler(app)
+    config_ldap(app)
     return app
 
 
@@ -99,6 +101,8 @@ def config_apscheduler(app):
     apscheduler.init_app(app)
     apscheduler.start()
 
+def config_ldap(app):
+    ldap_manager.init_app(app)
 
 app = create_app()
 tasks.InitTasks()

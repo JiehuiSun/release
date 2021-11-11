@@ -154,10 +154,11 @@ class GroupModel(db.Model):
 class DevUserModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False, comment="用户名")
-    job = db.Column(db.String(64), nullable=False, comment="工作")
+    password = db.Column(db.String(128), nullable=True, comment="密码")
+    job = db.Column(db.String(64), nullable=True, comment="工作")
     desc = db.Column(db.String(256), nullable=True, comment="简介")
     role_ids = db.Column(db.String(256), nullable=True, comment="角色ID")
-    email = db.Column(db.String(64), nullable=False, comment="邮箱")
+    email = db.Column(db.String(64), nullable=True, comment="邮箱")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
@@ -173,8 +174,8 @@ class DevUserModel(db.Model):
             ret_dict[k.name] = value
         return ret_dict
 
-    def __init__(self, username, password):
-        self.username = username
+    # def __init__(self, username, password):
+        # self.username = name
 
     def is_authenticated(self):
         return True
