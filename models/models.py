@@ -5,8 +5,10 @@
 # Filename: models.py
 
 
+import json
 import datetime
 
+from flask import current_app
 from base import db
 from utils import time_utils
 
@@ -154,7 +156,7 @@ class DevUserModel(db.Model):
     name = db.Column(db.String(64), nullable=False, comment="用户名")
     job = db.Column(db.String(64), nullable=False, comment="工作")
     desc = db.Column(db.String(256), nullable=True, comment="简介")
-    # group_id = db.Column(db.Integer, nullable=False, comment="组ID")
+    role_ids = db.Column(db.String(256), nullable=True, comment="角色ID")
     email = db.Column(db.String(64), nullable=False, comment="邮箱")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
@@ -168,6 +170,45 @@ class DevUserModel(db.Model):
             value = getattr(self, k.name)
             if isinstance(value, datetime.datetime):
                 value = value.strftime('%Y-%m-%d %H:%M:%S')
+            ret_dict[k.name] = value
+        return ret_dict
+
+    def __init__(self, username, password):
+        self.username = username
+
+    def is_authenticated(self):
+        return True
+
+    def is_active(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return str(self.id)
+
+
+class RoleModel(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), nullable=False, comment="组名")
+    comment = db.Column(db.String(256), nullable=True, comment="备注")
+    type_id = db.Column(db.Integer, nullable=True, comment="类型")
+    menu_list = db.Column(db.Text, nullable=True, comment="菜单")
+    is_deleted = db.Column(db.Boolean, default=False)
+    dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
+    dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
+
+    def to_dict(self):
+        ret_dict = {}
+        for k in self.__table__.columns:
+            if k.name == "is_deleted":
+                continue
+            value = getattr(self, k.name)
+            if isinstance(value, datetime.datetime):
+                value = value.strftime('%Y-%m-%d %H:%M:%S')
+            if k.name == "menu_list":
+                value = json.loads(value)
             ret_dict[k.name] = value
         return ret_dict
 

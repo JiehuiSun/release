@@ -8,7 +8,7 @@
 from api import Api
 
 from services import calculate_page
-from services.user_service import Group, User
+from services.user_service import Group, User, Role
 
 
 class GroupView(Api):
@@ -102,18 +102,16 @@ class RoleView(Api):
 
         self.ver_params()
 
-        role_list = [
-            {
-                "id": 1,
-                "name": "test"
-            },
-            {
-                "id": 2,
-                "name": "tmp"
-            },
-        ]
+        self.handle_page_params()
+
+        role_data = Role.list_role(**self.data)
+
         ret = {
-            "data_list": role_list
+            "data_list": role_data["data_list"],
+            "count": role_data["count"],
+            "page_num": self.data["page_num"],
+            "page_size": self.data["page_size"],
+            "page_count": calculate_page(role_data["count"])
         }
 
         return self.ret(data=ret)
@@ -138,6 +136,11 @@ class RoleView(Api):
 
         self.ver_params()
 
+        try:
+            Role.add_role(**self.data)
+        except Exception as e:
+            return self.ret(errcode=10000, errmsg=str(e))
+
         return self.ret()
 
     def put(self):
@@ -150,6 +153,11 @@ class RoleView(Api):
         }
 
         self.ver_params()
+
+        try:
+            Role.update_role(**self.data)
+        except Exception as e:
+            return self.ret(errcode=10000, errmsg=str(e))
 
         return self.ret()
 

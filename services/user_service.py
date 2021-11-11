@@ -5,8 +5,10 @@
 # Filename: user_service.py
 
 
+import json
+
 from base import db
-from models.models import DevUserModel, GroupModel, UserGroupModel
+from models.models import DevUserModel, GroupModel, UserGroupModel, RoleModel
 from . import handle_page
 from base.errors import ParamsError
 
@@ -123,3 +125,67 @@ class User():
             raise ParamsError("用户查询失败, id: user_id")
 
         return user_obj.to_dict()
+
+
+class Role():
+    """
+    角色
+    """
+    @classmethod
+    def add_role(cls, name, menu_list: list, type_id=1, comment=None):
+        role_dict = {
+            "name": name,
+            "menu_list": json.dumps(menu_list),
+            "type_id": type_id
+        }
+        if comment:
+            role_dict["comment"] = comment
+        role = RoleModel(**role_dict)
+
+        db.session.add(role)
+        db.session.commit()
+
+        return
+
+    @classmethod
+    def update_role(cls, id, name=None, menu_list: list=[], type_id=1, comment=None):
+        try:
+            role_obj = RoleModel.query.get(id)
+        except:
+            raise ParamsError("角色不存在")
+
+        role_obj.menu_list = json.dumps(menu_list)
+
+        if name != role_obj.name:
+            role_obj.name = name
+        if type_id != role_obj.type_id:
+            role_obj.type_id = type_id
+        if comment != role_obj.comment:
+            role_obj.comment = comment
+
+        db.session.commit()
+
+        return
+
+    @classmethod
+    def list_role(cls, keyword=None, type_id=None, page_num=1, page_size=999):
+        role_obj_list = RoleModel.query.filter_by(is_deleted=False) \
+            .order_by(RoleModel.id.desc())
+        if keyword:
+            role_obj_list = role_obj_list.filter(RoleModel.name.like(f"%{keyword}%"))
+        if type_id:
+            role_obj_list = role_obj_list.filter_by(type_id=type_id)
+
+        count = role_obj_list.count()
+        role_obj_list = handle_page(role_obj_list, page_num, page_size)
+
+        role_list = list()
+        for i in role_obj_list:
+            role_list.append(i.to_dict())
+
+        ret = {
+            "data_list": role_list,
+            "count": count
+        }
+
+        return ret
