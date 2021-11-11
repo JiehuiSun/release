@@ -108,9 +108,9 @@ class User():
         for i in user_obj_list:
             user_dict = i.to_dict()
             if user_dict["role_ids"]:
-                user_dict["role_id_list"] = list()
-            else:
                 user_dict["role_id_list"] = user_dict["role_ids"].split(",")
+            else:
+                user_dict["role_id_list"] = list()
             user_list.append(user_dict)
         for i in user_list:
             i["name"] = i["desc"]
