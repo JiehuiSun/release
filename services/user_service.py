@@ -106,7 +106,9 @@ class User():
 
         user_list = list()
         for i in user_obj_list:
-            user_list.append(i.to_dict())
+            user_dict = i.to_dict()
+            user_dict["role_id_list"] = user_dict["role_ids"].split(",")
+            user_list.append(user_dict)
         for i in user_list:
             i["name"] = i["desc"]
 
@@ -125,6 +127,20 @@ class User():
             raise ParamsError("用户查询失败, id: user_id")
 
         return user_obj.to_dict()
+
+    @classmethod
+    def update_user(cls, id, role_id_list :list=[]):
+        try:
+            user_obj = DevUserModel.query.get(id)
+        except Exception as e:
+            raise ParamsError("用户查询失败")
+
+        if role_id_list:
+            user_obj.role_ids = ",".join(str(i) for i in role_id_list)
+
+        db.session.commit()
+
+        return
 
 
 class Role():

@@ -87,6 +87,20 @@ class UserView(Api):
 
         return self.ret(data=ret)
 
+    def put(self):
+        self.params_dict = {
+            "id": "required int",
+            "role_id_list": "optional list"
+        }
+
+        try:
+            User.update_user(**self.data)
+        except Exception as e:
+            return self.ret(errcode=10000, errmsg=str(e))
+
+        return self.ret()
+
+
 
 class RoleView(Api):
     """
@@ -164,28 +178,5 @@ class RoleView(Api):
         self.ver_params()
 
         Role.del_role(**self.data)
-
-        return self.ret()
-
-
-class RoleMenuView(Api):
-    """
-    角色菜单权限
-    """
-    def get(self):
-        self.params_dict = {
-        }
-
-        self.ver_params()
-
-        return self.ret()
-
-    def post(self):
-        self.params_dict = {
-            "role_id": "required int",
-            "menu_list": "required list",
-        }
-
-        self.ver_params()
 
         return self.ret()
