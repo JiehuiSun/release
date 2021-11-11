@@ -189,3 +189,23 @@ class Role():
         }
 
         return ret
+
+    @classmethod
+    def query_role(cls, id):
+        try:
+            role_obj = RoleModel.query.get(id)
+        except:
+            raise ParamsError("角色不存在")
+        if role_obj.is_deleted:
+            raise ParamsError("角色不存在或已被删除")
+        return role_obj.to_dict()
+
+    @classmethod
+    def del_role(cls, id):
+        try:
+            role_obj = RoleModel.query.get(id)
+        except:
+            raise ParamsError("角色不存在")
+        role_obj.is_deleted = True
+        db.session.commit()
+        return

@@ -117,14 +117,9 @@ class RoleView(Api):
         return self.ret(data=ret)
 
     def get(self):
-        ret = {
-            "id": self.key,
-            "name": "角色名",
-            "menu_list": [],
-            "comment": "备注"
-        }
+        role_dict = Role.query_role(self.key)
 
-        return self.ret(data=ret)
+        return self.ret(data=role_dict)
 
     def post(self):
         self.params_dict = {
@@ -167,6 +162,8 @@ class RoleView(Api):
         }
 
         self.ver_params()
+
+        Role.del_role(**self.data)
 
         return self.ret()
 
