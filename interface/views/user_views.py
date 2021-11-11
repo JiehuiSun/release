@@ -86,3 +86,101 @@ class UserView(Api):
         }
 
         return self.ret(data=ret)
+
+
+class RoleView(Api):
+    """
+    角色
+    """
+    def list(self):
+        self.params_dict = {
+            "type_id": "optional str",
+            "keyword": "optional str",
+            "page_num": "optional str",
+            "page_size": "optional str"
+        }
+
+        self.ver_params()
+
+        role_list = [
+            {
+                "id": 1,
+                "name": "test"
+            },
+            {
+                "id": 2,
+                "name": "tmp"
+            },
+        ]
+        ret = {
+            "data_list": role_list
+        }
+
+        return self.ret(data=ret)
+
+    def get(self):
+        ret = {
+            "id": self.key,
+            "name": "角色名",
+            "menu_list": [],
+            "comment": "备注"
+        }
+
+        return self.ret(data=ret)
+
+    def post(self):
+        self.params_dict = {
+            "name": "required str",
+            "type_id": "optional int",
+            "menu_list": "required list",
+            "comment": "optional str"
+        }
+
+        self.ver_params()
+
+        return self.ret()
+
+    def put(self):
+        self.params_dict = {
+            "id": "required int",
+            "name": "required str",
+            "type_id": "optional int",
+            "menu_list": "required list",
+            "comment": "optional str"
+        }
+
+        self.ver_params()
+
+        return self.ret()
+
+    def delete(self):
+        self.params_dict = {
+            "id": "required int"
+        }
+
+        self.ver_params()
+
+        return self.ret()
+
+
+class RoleMenuView(Api):
+    """
+    角色菜单权限
+    """
+    def get(self):
+        self.params_dict = {
+        }
+
+        self.ver_params()
+
+        return self.ret()
+
+    def post(self):
+        self.params_dict = {
+            "role_id": "required int",
+            "menu_list": "required list",
+        }
+
+        self.ver_params()
+
+        return self.ret()
