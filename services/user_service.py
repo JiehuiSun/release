@@ -127,9 +127,25 @@ class User():
         try:
             user_obj = DevUserModel.query.get(user_id)
         except Exception as e:
-            raise ParamsError("用户查询失败, id: user_id")
+            raise ParamsError(f"用户查询失败, id: {user_id}, {str(e)}")
 
-        return user_obj.to_dict()
+        user_dict = user_obj.to_dict()
+
+        # role
+        if user_dict["role_ids"]:
+            user_dict["role_id_list"] = user_dict["role_ids"].split(",")
+        else:
+            user_dict["role_id_list"] = list()
+
+        # menu
+        menu_list = list()
+        if user_dict["role_id_list"]:
+            role_data = Role.list_role(id_list=user_dict["role_id_list"])
+            for i in role_data["data_list"]:
+                menu_list += i["menu_list"]
+            menu_list = list(set(menu_list))
+        user_dict["menu_list"] = menu_list
+        return user_dict
 
     @classmethod
     def update_user(cls, id, role_id_list :list=[]):
@@ -187,13 +203,15 @@ class Role():
         return
 
     @classmethod
-    def list_role(cls, keyword=None, type_id=None, page_num=1, page_size=999):
+    def list_role(cls, keyword=None, type_id=None, page_num=1, page_size=999, id_list: list=[]):
         role_obj_list = RoleModel.query.filter_by(is_deleted=False) \
             .order_by(RoleModel.id.desc())
         if keyword:
             role_obj_list = role_obj_list.filter(RoleModel.name.like(f"%{keyword}%"))
         if type_id:
             role_obj_list = role_obj_list.filter_by(type_id=type_id)
+        if id_list:
+            role_obj_list = role_obj_list.filter(RoleModel.id.in_(id_list))
 
         count = role_obj_list.count()
         role_obj_list = handle_page(role_obj_list, page_num, page_size)

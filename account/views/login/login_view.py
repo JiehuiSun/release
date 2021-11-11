@@ -76,7 +76,7 @@ class LogoutView(Api):
             'errmsg': 'Logout ok',
         }
         User.logout()
-        return self.data(data=ret)
+        return self.ret(data=ret)
 
 #
 # instance.add_url_rule('/login', view_func=Login.as_view('login'), methods=['POST'])

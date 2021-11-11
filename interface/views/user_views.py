@@ -100,6 +100,13 @@ class UserView(Api):
 
         return self.ret()
 
+    def get(self):
+        try:
+            user_dict = User.query_user(self.key)
+        except Exception as e:
+            return self.ret(errcode=10000, errmsg=str(e))
+
+        return self.ret(data=user_dict)
 
 
 class RoleView(Api):
