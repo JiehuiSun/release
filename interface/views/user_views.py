@@ -187,3 +187,13 @@ class RoleView(Api):
         Role.del_role(**self.data)
 
         return self.ret()
+
+class SelfInfoView(Api):
+    def list(self):
+        try:
+            user_id = 3
+            user_dict = User.query_user(user_id)
+        except Exception as e:
+            return self.ret(errcode=10000, errmsg=str(e))
+
+        return self.ret(data=user_dict)

@@ -5,7 +5,7 @@
 # Filename: urls.py
 
 
-from .views.user_views import GroupView, UserView, RoleView
+from .views.user_views import GroupView, UserView, RoleView, SelfInfoView
 from .views.project_views import ProjectView
 from .views.requirement_views import (RequirementViews, RequirementGroupViews,
                                       RequirementCodeViews, RequirementProjectViews)
@@ -26,6 +26,7 @@ v1_routing_dict = dict()
 v1_routing_dict["group"] = GroupView
 v1_routing_dict["user"] = UserView
 v1_routing_dict["role"] = RoleView
+v1_routing_dict["self_info"] = SelfInfoView
 
 # project
 v1_routing_dict["project"] = ProjectView
