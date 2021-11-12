@@ -124,7 +124,10 @@ class User():
                     i["role_list"] = list()
 
                 if i["job"]:
-                    job_id = i["job"]
+                    try:
+                        job_id = int(i["job"])
+                    except:
+                        job_id = 0
                     i["job"] = {
                         "id": job_id,
                         "name": dict(JOB_TYPE).get(job_id, "")
