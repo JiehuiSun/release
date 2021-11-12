@@ -7,6 +7,8 @@
 
 import json
 
+from sqlalchemy import or_
+
 from base import db
 from models.models import DevUserModel, GroupModel, UserGroupModel, RoleModel, JOB_TYPE
 from . import handle_page
@@ -92,7 +94,8 @@ class User():
         user_obj_list = DevUserModel.query.filter_by(is_deleted=False)
 
         if keyword:
-            user_obj_list = user_obj_list.filter(DevUserModel.name.like(f"%{keyword}%"))
+            user_obj_list = user_obj_list.filter(or_(DevUserModel.name.like(f"%{keyword}%"),
+                                                     DevUserModel.desc.like(f"%{keyword}%")))
 
         if group_id:
             user_group_obj_list = UserGroupModel.query.filter_by(is_deleted=False,

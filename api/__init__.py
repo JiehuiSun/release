@@ -7,7 +7,6 @@ from flask import request
 from flask import jsonify
 from flask import current_app
 from flask.views import View
-from flask_login import current_user
 
 from base import errors
 from base import session
@@ -38,7 +37,7 @@ class Api(VerParams, Resp, View):
             if not user_id:
                 raise errors.LoginExpiredError
             try:
-                current_user.id = int(user_id)
+                self.user_id = int(user_id)
             except:
                 raise errors.TokenError
 

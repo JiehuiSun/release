@@ -6,7 +6,6 @@
 
 
 from api import Api
-from flask_login import current_user
 
 from services import calculate_page
 from services.user_service import Group, User, Role, Job
@@ -192,7 +191,7 @@ class RoleView(Api):
 class SelfInfoView(Api):
     def list(self):
         try:
-            user_id = current_user.id
+            user_id = self.user_id
             user_dict = User.query_user(user_id)
         except Exception as e:
             return self.ret(errcode=10000, errmsg=str(e))
