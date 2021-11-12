@@ -8,7 +8,6 @@
 import os
 
 from flask import current_app
-from flask_login import current_user
 from base import db
 from base.errors import ParamsError
 from models.models import BuildLogModel
@@ -193,7 +192,7 @@ class BuildLog():
         return ret
 
     @classmethod
-    def add_build_log(cls, project_id, branch, env, commit_id=None):
+    def add_build_log(cls, project_id, branch, env, commit_id=None, user_id=0):
         project_dict = Project.query_project(project_id, False)
         try:
             job_type = project_dict["job"]["name"]
@@ -244,7 +243,7 @@ class BuildLog():
             "branch": branch,
             "commit_hash": commit_id,
             "status": 1, # TODO
-            "creator": current_user.id,
+            "creator": user_id,
             "build_type": 1,
             "type_id": project_dict["type_id"],
             "group_id": project_dict["group_id"],

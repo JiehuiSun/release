@@ -96,6 +96,7 @@ class BuildLogView(Api):
         """
 
         try:
+            self.data["user_id"] = self.user_id
             build_log_id = BuildLog.add_build_log(**self.data)
         except Exception as e:
             return self.ret(errcode=100000, errmsg=str(e))

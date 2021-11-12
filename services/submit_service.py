@@ -6,7 +6,6 @@
 
 
 import datetime
-from flask_login import current_user
 
 from base import db
 from base.errors import ParamsError
@@ -107,7 +106,7 @@ class Submit():
         return ret
 
     @classmethod
-    def add_submit(cls, log_id):
+    def add_submit(cls, log_id, user_id=0):
         try:
             build_obj = BuildLogModel.query.get(log_id)
         except Exception as e:
@@ -122,7 +121,7 @@ class Submit():
             "branch": build_obj.branch,
             "commit_hash": build_obj.commit_hash,
             "status": 1,
-            "creator": current_user.id,
+            "creator": user_id,
             "build_type": build_obj.build_type,
             "file_path": build_obj.file_path,
             "submit_id": build_obj.submit_id,

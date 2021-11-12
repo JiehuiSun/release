@@ -28,6 +28,7 @@ class User():
                                                 name=username).one_or_none()
         if not user_obj:
             user_dict = {
+                "desc": username,
                 "name": username,
                 "email": f"{username}@xiavan.com",
                 "password": cls.gen_pwd(username, password)
