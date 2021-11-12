@@ -220,7 +220,8 @@ class GitLab():
         project = cls.gitlab().projects.get(project_id)
         p_local_path = f"{pro_dir}/{project.name}"
         if not os.path.exists(p_local_path):
-            clone_cmd = f"git clone {project.http_url_to_repo} {p_local_path}"
+            project_url = project.ssh_url_to_repo.replace("op-gitlab.mumway.com", "gitlab.xiavan.cloud")
+            clone_cmd = f"git clone {project_url} {p_local_path}"
             if os.system(f"{clone_cmd} >> {log_file}"):
                 raise InvalidArgsError("打包异常, 项目克隆失败")
 
