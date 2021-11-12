@@ -54,8 +54,8 @@ class User():
 
         # cookie
         # user_dict = user_bke.query_user(user_obj.id)
-        login_user(user_obj)
-        current_user.token = token
+        # login_user(user_obj)
+        # current_user.token = token
 
         ret = {
             "token": token,
@@ -64,8 +64,8 @@ class User():
 
     @classmethod
     def logout(cls):
-        redis.client.delete(current_user.token)
-        logout_user()
+        # redis.client.delete(current_user.token)
+        # logout_user()
         return
 
     @classmethod
