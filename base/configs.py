@@ -39,6 +39,7 @@ class DefaultConfig(object):
     # gitlab
     GITLAB_TOKEN = ""
     GITLAB_HOST = ""
+    GIT_ABS_CMD = "/usr/bin/git"
 
     REPOSITORY_DIR = ""
     DOWNLOAD_HOST = ""

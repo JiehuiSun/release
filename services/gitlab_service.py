@@ -7,6 +7,7 @@
 
 import os
 import gitlab
+import tarfile
 import shutil
 from flask import current_app
 
@@ -138,8 +139,8 @@ class GitLab():
 
         with open(log_file, "a") as e:
             e.write(f"tar file ok. {tar_file_path}\n")
-        if os.path.exists(tmp_dir):
-            shutil.rmtree(tmp_dir)
+        # if os.path.exists(tmp_dir):
+            # shutil.rmtree(tmp_dir)
 
         ret = {
             "file_name": tar_file_name,
@@ -217,15 +218,16 @@ class GitLab():
         """
         TODO 默认配置使用bash, 项目配置使用text的shell, 后期做兼容.
         """
+        git_cmd = current_app.config["GIT_ABS_CMD"]
         project = cls.gitlab().projects.get(project_id)
         p_local_path = f"{pro_dir}/{project.name}"
         if not os.path.exists(p_local_path):
             project_url = project.ssh_url_to_repo.replace("op-gitlab.mumway.com", "gitlab.xiavan.cloud")
-            clone_cmd = f"git clone {project_url} {p_local_path}"
+            clone_cmd = f"{git_cmd} clone {project_url} {p_local_path}"
             if os.system(f"{clone_cmd} >> {log_file}"):
                 raise InvalidArgsError("打包异常, 项目克隆失败")
 
-        if os.system(f"cd {p_local_path} >> {log_file} 2>&1 && git checkout {branch} >> {log_file} 2>&1 && git pull origin {branch} >> {log_file} 2>&1 &&/bin/bash {base_file} {env} >> {log_file} 2>&1"):
+        if os.system(f"cd {p_local_path} >> {log_file} 2>&1 && {git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1 &&/bin/bash {base_file} {env} >> {log_file} 2>&1"):
             raise InvalidArgsError("打包异常, Git错误或脚本执行错误")
         ret_dir = f"{p_local_path}/dist"
 

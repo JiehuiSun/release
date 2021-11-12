@@ -34,7 +34,7 @@ def create_app():
     config_session(app)
     config_login(app)
     config_mail(app)
-    config_apscheduler(app)
+    # config_apscheduler(app)
     config_ldap(app)
     return app
 
