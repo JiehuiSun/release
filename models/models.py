@@ -159,6 +159,7 @@ class DevUserModel(db.Model):
     desc = db.Column(db.String(256), nullable=True, comment="简介")
     role_ids = db.Column(db.String(256), nullable=True, comment="角色ID")
     email = db.Column(db.String(64), nullable=True, comment="邮箱")
+    is_super = db.Column(db.Boolean, default=False)
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)

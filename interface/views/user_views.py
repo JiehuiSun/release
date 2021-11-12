@@ -8,7 +8,7 @@
 from api import Api
 
 from services import calculate_page
-from services.user_service import Group, User, Role
+from services.user_service import Group, User, Role, Job
 
 
 class GroupView(Api):
@@ -75,7 +75,7 @@ class UserView(Api):
 
         self.handle_page_params()
 
-        user_data = User.list_user(**self.data)
+        user_data = User.list_user(need_detail=True, **self.data)
 
         ret = {
             "data_list": user_data["data_list"],
@@ -197,3 +197,14 @@ class SelfInfoView(Api):
             return self.ret(errcode=10000, errmsg=str(e))
 
         return self.ret(data=user_dict)
+
+
+class JobView(Api):
+    def list(self):
+        job_list = Job.list_job()
+
+        ret = {
+            "data_list": job_list
+        }
+
+        return self.ret(data=ret)

@@ -26,7 +26,9 @@ class Api(VerParams, Resp, View):
     def _get_token(self):
         token = request.headers.get('HTTP-X-TOKEN')
         if not token:
-            raise errors.NoTokenError
+            token = request.headers.get('Token')
+            if not token:
+                raise errors.NoTokenError
         return token
 
     def _identification(self):
