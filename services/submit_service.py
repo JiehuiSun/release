@@ -6,6 +6,7 @@
 
 
 import datetime
+from flask_login import current_user
 
 from base import db
 from base.errors import ParamsError
@@ -121,7 +122,7 @@ class Submit():
             "branch": build_obj.branch,
             "commit_hash": build_obj.commit_hash,
             "status": 1,
-            "creator": build_obj.creator,
+            "creator": current_user.id,
             "build_type": build_obj.build_type,
             "file_path": build_obj.file_path,
             "submit_id": build_obj.submit_id,

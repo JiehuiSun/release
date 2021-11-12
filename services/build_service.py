@@ -8,6 +8,7 @@
 import os
 
 from flask import current_app
+from flask_login import current_user
 from base import db
 from base.errors import ParamsError
 from models.models import BuildLogModel
@@ -243,7 +244,7 @@ class BuildLog():
             "branch": branch,
             "commit_hash": commit_id,
             "status": 1, # TODO
-            "creator": 0, # TODO
+            "creator": current_user.id,
             "build_type": 1,
             "type_id": project_dict["type_id"],
             "group_id": project_dict["group_id"],

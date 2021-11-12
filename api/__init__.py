@@ -34,8 +34,13 @@ class Api(VerParams, Resp, View):
     def _identification(self):
         if self.NEED_LOGIN:
             self.token = self._get_token()
-            if not redis.client.get(self.token):
+            user_id = redis.client.get(self.token)
+            if not user_id:
                 raise errors.LoginExpiredError
+            try:
+                current_user.id = int(user_id)
+            except:
+                raise errors.TokenError
 
     def _handle_params(self):
         """
