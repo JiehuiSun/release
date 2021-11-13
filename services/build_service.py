@@ -10,7 +10,7 @@ import os
 from flask import current_app
 from base import db
 from base.errors import ParamsError
-from models.models import BuildLogModel
+from models.models import BuildLogModel, LOG_STATUS
 from .project_service import Project
 from .user_service import User
 from .gitlab_service import GitLab
@@ -82,7 +82,10 @@ class Build():
             build_dict = {
                 "version_num": i.title,
                 "creator": i.creator,
-                "last_status": i.status,
+                "last_status": {
+                    "code": i.status,
+                    "value": dict(LOG_STATUS).get(i.status)
+                },
                 "dt_last_submit": datetime_2_str_by_format(i.dt_created),
                 "last_duration": (i.dt_updated - i.dt_created).seconds
             }
@@ -296,18 +299,25 @@ class BuildLog():
             with app.app_context():
                 with open(log_file, "a") as e:
                     e.write(f">>: Query Build Info ..\n")
-                    build_obj = BuildLogModel.query.get(build_log_id)
+                build_obj = BuildLogModel.query.get(build_log_id)
+                with open(log_file, "a") as e:
                     e.write(f">>: Clone Project Start..\n")
-                    tar_file_dict = GitLab.clone_project(name, tar_file_name, source_project_id, branch, log_file, job_type, env)
-                    e.write(f">>: Clone Project End..\n")
-                    e.write(f">>: Build Success! \n tar file name is {tar_file_name}\n\n")
-                    e.write(f">>: log file name is {log_file}\n\n")
-                    e.write(f"Success!!!\n")
+                with open(log_file, "a") as e:
+                    tag, tar_file_dict = GitLab.clone_project(name, tar_file_name, source_project_id, branch, log_file, job_type, env)
+                    if not tag:
+                        build_obj.status = 3
+                        e.write(tar_file_dict)
+                        e.write(f">>: log file name is {log_file}\n\n")
+                    else:
+                        e.write(f">>: Clone Project End..\n")
+                        e.write(f">>: Build Success! \n tar file name is {tar_file_name}\n\n")
+                        e.write(f">>: log file name is {log_file}\n\n")
+                        e.write(f"Success!!!\n")
+                        build_obj.status = 2
+                        build_obj.file_path = tar_file_dict["path"]
 
                 with open(log_file, "r") as e:
                     build_obj.log_text = e.read()
-                build_obj.status = 2
-                build_obj.file_path = tar_file_dict["path"]
                 # query log
                 db.session.commit()
         except Exception as s:
