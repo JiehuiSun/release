@@ -50,10 +50,10 @@ class SubmitProjectView(Api):
 
         self.ver_params()
 
-        # TODO 交付
-
         # 记录
         self.data["user_id"] = self.user_id
         Submit.add_submit(**self.data)
+
+        # TODO 交付
 
         return self.ret()

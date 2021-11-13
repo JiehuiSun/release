@@ -110,12 +110,12 @@ class GitLab():
             t_name = f"pack_{job_type.lower()}"
             base_file = f"./base/pack_scripts/{t_name}.sh"
             if not os.path.isfile(base_file):
-                return False, "没有打包脚本"
+                return False, "没有打包脚本\n"
             base_file = os.path.abspath(base_file)
 
             pack_func = getattr(cls, t_name)
             if not pack_func:
-                return False, "项目语言脚本配置异常, 请检查项目及脚本配置以及打包入口"
+                return False, "项目语言脚本配置异常, 请检查项目及脚本配置以及打包入口\n"
 
             # commit v2
             tag, tgz = pack_func(project_id, branch, base_file, pro_dir, log_file, env, commit=None)
@@ -124,12 +124,12 @@ class GitLab():
             if not tag:
                 with open(log_file, "a") as e:
                     e.write(tgz)
-                return False, "Build Err!"
+                return False, "Build Err!\n"
         except Exception as s:
             # TODO 日志
             with open(log_file, "a") as e:
                 e.write(">>: Error: pull project error..\n\n")
-            return False, "Clone Err! {str(s)}"
+            return False, "Clone Err! {str(s)}\n"
 
         with open(log_file, "a") as e:
             e.write("generate 'tar.gz' file..\n")
@@ -229,10 +229,10 @@ class GitLab():
             project_url = project.ssh_url_to_repo.replace("op-gitlab.mumway.com", "gitlab.xiavan.cloud")
             clone_cmd = f"{git_cmd} clone {project_url} {p_local_path}"
             if os.system(f"{clone_cmd} >> {log_file}"):
-                return False, "打包异常, 项目克隆失败"
+                return False, "打包异常, 项目克隆失败\n"
 
         if os.system(f"cd {p_local_path} >> {log_file} 2>&1 && {git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1 &&/bin/bash {base_file} {env} >> {log_file} 2>&1"):
-            return False, "打包异常, Git错误或脚本执行错误"
+            return False, "打包异常, Git错误或脚本执行错误\n"
         ret_dir = f"{p_local_path}/dist"
 
         return True, ret_dir
