@@ -133,4 +133,4 @@ class Submit():
         db.session.add(submit_log_obj)
         db.session.commit()
 
-        return
+        return build_obj.to_dict()

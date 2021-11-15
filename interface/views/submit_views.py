@@ -5,10 +5,13 @@
 # Filename: submit_views.py
 
 
+import os
 from api import Api
+from flask import current_app
 
 from services import calculate_page
 from services.submit_service import Submit
+from services.deploy_service import Deploy
 
 
 class SubmitProjectView(Api):
@@ -52,8 +55,11 @@ class SubmitProjectView(Api):
 
         # 记录
         self.data["user_id"] = self.user_id
-        Submit.add_submit(**self.data)
+        submit_dict = Submit.add_submit(**self.data)
 
         # TODO 交付
+        repository_dir = current_app.config["REPOSITORY_DIR"]
+        file_path = os.path.join(repository_dir, submit_dict["file_path"])
+        Deploy.add_deploy(submit_dict["project_id"], file_path)
 
         return self.ret()

@@ -5,7 +5,8 @@
 # Filename: deploy_service.py
 
 
-from models.models import Host, HostProject
+from models.models import Hosts, HostProject
+from models.models import SubmitLogModel
 from services.ssh_service import SSH
 
 
@@ -18,18 +19,24 @@ class Deploy():
         host_project_obj_list = HostProject.query.filter_by(project_id=project_id,
                                                             is_deleted=False).all()
 
-        host_id_list = [i.host_id for i in host_project_obj_list]
+        host_dict_list = dict()
+        for i in host_project_obj_list:
+            host_dict_list[i.host_id] = i.path
 
-        host_obj_list = Host.query.filter(Host.id.in_(host_id_list)).all()
+        host_obj_list = Hosts.query.filter(Hosts.id.in_(list(host_dict_list.keys()))).all()
+        if not host_obj_list:
+            # 未配置主机信息
+            raise "未配置主机信息"
 
         for i in host_obj_list:
             ssh = SSH(i.hostname, i.port, i.username, i.pkey)
 
             tar_gz_file = tarfile_path.split("/")[-1]
-            ssh.put_file(tarfile_path, f'/tmp/{tar_gz_file}')
-            command = f'cd /tmp && tar xf {tar_gz_file} && echo "deploy success"'
+            print(host_dict_list[i.id])
+            ssh.put_file(tarfile_path, f'{host_dict_list[i.id]}/{tar_gz_file}')
+            command = f'cd {host_dict_list[i.id]} && tar xf {host_dict_list[i.id]}/{tar_gz_file} && echo "deploy success"'
             for code, out in ssh.exec_command_with_stream(command):
-                pass
+                print(code, out)
             if code != 0:
                 # error
                 return f"Deploy Err {out}"

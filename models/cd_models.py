@@ -11,10 +11,11 @@ from base import db
 from utils import time_utils
 
 
-class Host(db.Model):
+class Hosts(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False, comment="名称")
-    zone = db.Column(db.String(64), nullable=True, comment="zone") # tmp
+    # zone = db.Column(db.String(64), nullable=True, comment="zone") # tmp
+    is_verified = db.Column(db.Boolean, default=True) # tmp
     hostname = db.Column(db.String(64), nullable=False, comment="主机名")
     port = db.Column(db.Integer, nullable=False, default=22, comment="端口")
     username = db.Column(db.String(64), nullable=False, comment="用户名")

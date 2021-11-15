@@ -12,7 +12,7 @@ from flask import current_app
 from base import db
 from utils import time_utils
 
-from .cd_models import Host, HostProject
+from .cd_models import Hosts, HostProject
 
 
 WORK_TYPE = (
