@@ -2,6 +2,7 @@ import os
 import logging
 from flask import Flask
 from werkzeug.routing import BaseConverter
+from flask_cors import CORS
 
 from base import configs
 from base import db
@@ -36,6 +37,7 @@ def create_app():
     config_mail(app)
     # config_apscheduler(app)
     config_ldap(app)
+    CORS(app, supports_credentials=True)
     return app
 
 
