@@ -34,7 +34,8 @@ class Deploy():
             tar_gz_file = tarfile_path.split("/")[-1]
             print(host_dict_list[i.id])
             ssh.put_file(tarfile_path, f'{host_dict_list[i.id]}/{tar_gz_file}')
-            command = f'cd {host_dict_list[i.id]} && tar xf {host_dict_list[i.id]}/{tar_gz_file} && echo "deploy success"'
+            file_name = tar_gz_file.split["."][0]
+            command = f'cd {host_dict_list[i.id]} && tar xf {host_dict_list[i.id]}/{tar_gz_file} &&mv -Rf {file_name}/* . && rm - rf {file_name} {tar_gz_file}&& echo "deploy success"'
             for code, out in ssh.exec_command_with_stream(command):
                 print(code, out)
             if code != 0:

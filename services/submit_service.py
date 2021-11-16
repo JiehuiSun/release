@@ -134,3 +134,10 @@ class Submit():
         db.session.commit()
 
         return build_obj.to_dict()
+
+    @classmethod
+    def update_status(cls, id, status_id):
+        submit_obj = SubmitLogModel.query.get(id)
+        submit_obj.status = status_id
+        db.session.commit()
+        return

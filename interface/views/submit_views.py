@@ -57,9 +57,14 @@ class SubmitProjectView(Api):
         self.data["user_id"] = self.user_id
         submit_dict = Submit.add_submit(**self.data)
 
-        # TODO 交付
+        #  交付(可做异步)
         repository_dir = current_app.config["REPOSITORY_DIR"]
         file_path = os.path.join(repository_dir, submit_dict["file_path"])
-        Deploy.add_deploy(submit_dict["project_id"], file_path)
+        ret = Deploy.add_deploy(submit_dict["project_id"], file_path)
+        if ret:
+            Submit.update_status(submit_dict["id"], 3)
+            return self.ret(errcode=10000, errmsg=ret)
+
+        Submit.update_status(submit_dict["id"], 2)
 
         return self.ret()
