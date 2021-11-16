@@ -47,6 +47,7 @@ class HostProject(db.Model):
     project_id = db.Column(db.Integer, nullable=True, comment="创建者ID")
     path = db.Column(db.String(256), nullable=False, comment="服务目录")
     ignore_text = db.Column(db.Text, nullable=True, comment="忽略文件(一行一个文件, 相对路径)")
+    env = db.Column(db.String(24), nullable=True, comment="环境")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
