@@ -7,6 +7,7 @@ from flask import request
 from flask import jsonify
 from flask import current_app
 from flask.views import View
+from flask import make_response
 
 from base import errors
 from base import session
@@ -119,7 +120,11 @@ class Api(VerParams, Resp, View):
                 "data": {}
             }
         if isinstance(result, dict):
-            return jsonify(result)
+            res = make_response(jsonify(result))
+            res.headers['Access-Control-Allow-Origin'] = '*'
+            res.headers['Access-Control-Allow-Method'] = '*'
+            res.headers['Access-Control-Allow-Headers'] = '*'
+            return res
         else:
             return result
 
