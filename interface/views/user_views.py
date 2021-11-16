@@ -90,7 +90,9 @@ class UserView(Api):
     def put(self):
         self.params_dict = {
             "id": "required int",
-            "role_id_list": "optional list"
+            "role_id_list": "optional list",
+            "group_id_list": "optional list",
+            "job_id": "optional int",
         }
 
         try:
