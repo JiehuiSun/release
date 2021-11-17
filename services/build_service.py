@@ -240,7 +240,7 @@ class BuildLog():
 
         build_log_dict = {
             "version_num": tar_file_name,
-            "title": f"#{log_count+1} 【{branch}】",
+            "title": f"#{log_count+1} 【{branch}】{env}",
             "env": env,
             "project_id": project_id,
             "branch": branch,
