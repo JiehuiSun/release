@@ -162,6 +162,7 @@ class BuildLog():
         user_id_list = list()
         for i in log_obj_list:
             log_dict = i.to_dict()
+            log_dict["version_num"] = log_dict["title"]
             user_id_list.append(log_dict["creator"])
             log_list.append(log_dict)
 
