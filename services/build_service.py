@@ -361,15 +361,20 @@ class BuildLog():
         except:
             user_name = "未知"
 
-        ret = {
-            "log_text": log_text,
-            "is_not_finished": is_not_finished,
-            "commit_list": log_obj.commit_text.splitlines(),
-            "version_num": log_obj.title,
-            "dt_created": datetime_2_str_by_format(log_obj.dt_created),
-            "duration": dt2ts(log_obj.dt_updated) - dt2ts(log_obj.dt_created),
-            "operator_name": user_name,
-            "download_url": f"{h}{a}{p}"
+        status_dict = {
+            "id": log_obj.status,
+            "name": dict(LOG_STATUS).get(log_obj.status, "")
         }
+
+        ret = log_obj.to_dict()
+        ret["log_text"] = log_text
+        ret["is_not_finished"] = is_not_finished
+        ret["commit_list"] = ret["commit_text"].splitlines()
+        ret["version_num"] = ret["title"]
+        ret["operator_name"] = user_name
+        ret["download_url"] = f"{h}{a}{p}"
+
+        ret["duration"] = str2tsp(ret["dt_updated"]) - str2tsp(ret["dt_created"])
+        ret["fetch_duration"] = ret["duration"]
 
         return ret
