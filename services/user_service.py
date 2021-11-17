@@ -182,7 +182,7 @@ class User():
         return user_dict
 
     @classmethod
-    def update_user(cls, id, role_id_list: list=[], group_id_list: list=[], job_id=None):
+    def update_user(cls, id, role_id_list: list=[], group_id_list: list=[], job_id=None, desc=None):
         try:
             user_obj = DevUserModel.query.get(id)
         except Exception as e:
@@ -209,6 +209,8 @@ class User():
                 tmp_o.update({"is_deleted": True}, synchronize_session=False)
         if job_id:
             user_obj.job = job_id
+        if desc:
+            user_obj.desc = desc
 
         db.session.commit()
 
