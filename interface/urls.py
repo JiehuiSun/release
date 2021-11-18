@@ -13,7 +13,7 @@ from .views.submit_views import SubmitProjectView
 from .views.build_views import BuildProjectView, BuildLogView, BuildConsoleLogView
 from .views.gitlab_views import BranchView, SyncProjectView
 from .views.utils_views import DownLoadView
-from .views.host_views import HostView
+from .views.host_views import HostView, HostProjectView
 
 
 MODEL_NAME = "interface"
@@ -56,6 +56,7 @@ v1_routing_dict["utils/download"] = DownLoadView
 
 # host
 v1_routing_dict["host"] = HostView
+v1_routing_dict["host/project"] = HostProjectView
 
 
 for k, v in v1_routing_dict.items():

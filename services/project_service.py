@@ -66,7 +66,7 @@ class Project():
                 db.session.commit()
             except Exception as e:
                 db.session.rollback()
-                raise str(e)
+                raise ParamsError(str(e))
 
         return
 
@@ -103,7 +103,10 @@ class Project():
             source_project_id_list.append(i.source_project_id)
             project_list.append(i.to_dict())
 
-        if project_list and need_git_info or not is_base:
+        if is_base:
+            need_git_info = False
+
+        if project_list and need_git_info:
             # 由于同步项目写错地方了, 避免循环引用, 暂时内部引用
             from services.gitlab_service import GitLab
 
@@ -223,7 +226,7 @@ class Project():
                     db.session.flush()
             except Exception as e:
                 db.session.rollback()
-                raise str(e)
+                raise ParamsError(str(e))
         db.session.commit()
 
         return
