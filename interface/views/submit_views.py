@@ -60,7 +60,7 @@ class SubmitProjectView(Api):
         #  交付(可做异步)
         repository_dir = current_app.config["REPOSITORY_DIR"]
         file_path = os.path.join(repository_dir, submit_dict["file_path"])
-        ret = Deploy.add_deploy(submit_dict["project_id"], file_path)
+        ret = Deploy.add_deploy(submit_dict["project_id"], file_path, submit_dict["env"])
         if ret:
             Submit.update_status(submit_dict["id"], 3)
             return self.ret(errcode=10000, errmsg=ret)
