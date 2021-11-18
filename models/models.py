@@ -157,6 +157,7 @@ class DevUserModel(db.Model):
     password = db.Column(db.String(128), nullable=True, comment="密码")
     job = db.Column(db.String(64), nullable=True, comment="工作")
     desc = db.Column(db.String(256), nullable=True, comment="简介")
+    nickname = db.Column(db.String(128), nullable=True, comment="昵称(默认真实姓名)")
     role_ids = db.Column(db.String(256), nullable=True, comment="角色ID")
     email = db.Column(db.String(64), nullable=True, comment="邮箱")
     is_super = db.Column(db.Boolean, default=False)
