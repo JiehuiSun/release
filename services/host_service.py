@@ -8,6 +8,7 @@ from sqlalchemy import or_
 from base import db
 from models.models import Hosts, HostProject
 from . import handle_page, magic_key
+from .user_service import User
 
 
 class HostServer():
@@ -79,7 +80,8 @@ class HostServer():
 
     @classmethod
     def list_host(cls, keyword=None, page_num=1, page_size=999):
-        host_obj_list = Hosts.query.filter_by(is_deleted=False)
+        # host_obj_list = Hosts.query.filter_by(is_deleted=False)
+        host_obj_list = Hosts.query
         host_obj_list = host_obj_list.order_by(Hosts.id.desc())
         if keyword:
             host_obj_list = host_obj_list.filter(
@@ -94,11 +96,33 @@ class HostServer():
         host_obj_list = handle_page(host_obj_list, page_num, page_size)
 
         host_list = list()
+        user_id_list = list()
         for i in host_obj_list:
             host_dict = i.to_dict()
             # 列表不展示私钥
             host_dict.pop("pkey")
             # host_dict["pkey"] = magic_key.encrypt(host_dict["pkey"]).decode()
+            host_list.append(host_dict)
+            user_id_list.append(host_dict["created_by_id"])
+
+        user_data = User.list_user(user_id_list=user_id_list)
+        user_dict_list = dict()
+        for i in user_data["data_list"]:
+            if i["id"] in user_dict_list:
+                continue
+            user_dict_list[i["id"]] = {
+                "id": i["id"],
+                "name": i["name"]
+            }
+
+        for i in host_list:
+            user_dict = user_dict_list.get(i["created_by_id"])
+            if not user_dict:
+                user_dict = {
+                    "id": 0,
+                    "name": "未知"
+                }
+            i["operator"] = user_dict
 
         ret = {
             "data_list": host_list,
@@ -115,6 +139,6 @@ class HostServer():
             raise f"查询失败, 主机信息不存在或已被删除, {str(e)}"
 
         ret = host_obj.to_dict()
-        ret["pkey"] = ret.encrypt(ret["pkey"]).decode()
+        ret["pkey"] = magic_key.encrypt(ret["pkey"]).decode()
 
         return ret

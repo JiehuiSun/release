@@ -39,4 +39,60 @@ class HostView(Api):
         return self.ret(data=ret)
 
     def post(self):
-        pass
+        self.params_dict = {
+            "name": "required str",
+            "hostname": "required str",
+            "port": "optional int",
+            "username": "required str",
+            "pkey": "required str",
+            "desc": "optional str",
+        }
+
+        self.ver_params()
+
+        self.data["user_id"] = self.user_id
+
+        HostServer.add_host(**self.data)
+
+        return self.ret()
+
+    def put(self):
+        self.params_dict = {
+            "id": "required int",
+            "name": "optional str",
+            "hostname": "optional str",
+            "port": "optional int",
+            "username": "optional str",
+            "pkey": "optional str",
+            "desc": "optional str",
+        }
+
+        self.ver_params()
+
+        self.data["user_id"] = self.user_id
+        HostServer.update_host(**self.data)
+
+        return self.ret()
+
+    def delete(self):
+        self.params_dict = {
+            "id": "required int",
+        }
+
+        self.ver_params()
+
+        HostServer.del_host(**self.data)
+
+        return self.ret()
+
+    def get(self):
+        self.params_dict = {
+        }
+
+        self.ver_params()
+
+        self.handle_page_params()
+
+        host_dict = HostServer.query_host(self.key)
+
+        return self.ret(data=host_dict)
