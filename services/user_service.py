@@ -95,7 +95,8 @@ class User():
 
         if keyword:
             user_obj_list = user_obj_list.filter(or_(DevUserModel.name.like(f"%{keyword}%"),
-                                                     DevUserModel.desc.like(f"%{keyword}%")))
+                                                     DevUserModel.desc.like(f"%{keyword}%"),
+                                                     DevUserModel.nickname.like(f"%{keyword}%")))
 
         if group_id:
             user_group_obj_list = UserGroupModel.query.filter_by(is_deleted=False,
@@ -145,9 +146,6 @@ class User():
                     i["group_list"] = [j.to_dict() for j in group_obj_list]
                 else:
                     i["group_list"] = list()
-
-        for i in user_list:
-            i["name"] = i["desc"]
 
         ret = {
             "data_list": user_list,
