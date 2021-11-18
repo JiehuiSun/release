@@ -303,6 +303,7 @@ class SubmitLogModel(db.Model):
     count = db.Column(db.Integer, nullable=True, default=1, comment="组ID")
     log_text = db.Column(db.Text, nullable=True, comment="日志内容(先不分表)")
     is_deleted = db.Column(db.Boolean, default=False)
+    dt_build = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
 

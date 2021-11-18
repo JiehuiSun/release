@@ -127,6 +127,7 @@ class Submit():
             "submit_id": build_obj.submit_id,
             "group_id": build_obj.group_id,
             "type_id": build_obj.type_id,
+            "dt_build": build_obj.dt_created,
         }
 
         submit_log_obj = SubmitLogModel(**s_params)
