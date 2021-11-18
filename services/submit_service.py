@@ -13,8 +13,10 @@ from models.models import BuildLogModel, SubmitLogModel
 from .project_service import Project
 from .user_service import User
 from .gitlab_service import GitLab
+from .deploy_service import Deploy
 from . import handle_page
 from utils.time_utils import str2tsp
+from utils import async_func
 
 
 class Submit():
@@ -141,4 +143,19 @@ class Submit():
         submit_obj = SubmitLogModel.query.get(id)
         submit_obj.status = status_id
         db.session.commit()
+        return
+
+    @classmethod
+    @async_func
+    def async_add_deploy(cls, submit_id, project_id, file_path, env):
+        """
+        TODO log
+        """
+        ret = Deploy.add_deploy(project_id, file_path, env)
+        if ret:
+            Submit.update_status(submit_id, 3)
+            # return self.ret(errcode=10000, errmsg=ret)
+            return
+
+        Submit.update_status(submit_id, 2)
         return

@@ -11,7 +11,6 @@ from flask import current_app
 
 from services import calculate_page
 from services.submit_service import Submit
-from services.deploy_service import Deploy
 
 
 class SubmitProjectView(Api):
@@ -60,11 +59,9 @@ class SubmitProjectView(Api):
         #  交付(可做异步)
         repository_dir = current_app.config["REPOSITORY_DIR"]
         file_path = os.path.join(repository_dir, submit_dict["file_path"])
-        ret = Deploy.add_deploy(submit_dict["project_id"], file_path, submit_dict["env"])
-        if ret:
-            Submit.update_status(submit_dict["id"], 3)
-            return self.ret(errcode=10000, errmsg=ret)
-
-        Submit.update_status(submit_dict["id"], 2)
+        Submit.async_add_deploy(submit_dict["id"],
+                                submit_dict["project_id"],
+                                file_path,
+                                submit_dict["env"])
 
         return self.ret()
