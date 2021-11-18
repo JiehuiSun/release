@@ -151,11 +151,17 @@ class Submit():
         """
         TODO log
         """
-        ret = Deploy.add_deploy(project_id, file_path, env)
-        if ret:
-            Submit.update_status(submit_id, 3)
-            # return self.ret(errcode=10000, errmsg=ret)
-            return
+        try:
+            from application import app
+            with app.app_context():
+                ret = Deploy.add_deploy(project_id, file_path, env)
+                if ret:
+                    cls.update_status(submit_id, 3)
+                    print(f"Deploy Error, {ret}")
+                    return
 
-        Submit.update_status(submit_id, 2)
+                cls.update_status(submit_id, 2)
+        except Exception as e:
+            print(f">> Deploy Error, {str(e)}")
+            cls.update_status(submit_id, 3)
         return
