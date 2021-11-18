@@ -49,7 +49,9 @@ class Deploy():
 
             # 运行后
             if host_dict_list[i.id]["script_text"]:
-                for script_cmd in host_dict_list[i.id]["script_text"]:
+                for script_cmd in host_dict_list[i.id]["script_text"].splitlines():
+                    if not script_cmd:
+                        continue
                     command += f" &&{script_cmd}"
 
             command += '&& echo "deploy success"'
