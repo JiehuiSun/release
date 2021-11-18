@@ -139,7 +139,8 @@ class User():
                 else:
                     i["job"] = dict()
 
-                tmp_obj_list = UserGroupModel.query.filter_by(user_id=i["id"]).all()
+                tmp_obj_list = UserGroupModel.query.filter_by(user_id=i["id"],
+                                                              is_deleted=False).all()
                 if tmp_obj_list:
                     group_id_list = [j.group_id for j in tmp_obj_list]
                     group_obj_list = GroupModel.query.filter(GroupModel.id.in_(group_id_list)).all()
