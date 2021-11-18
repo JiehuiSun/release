@@ -93,7 +93,8 @@ class UserView(Api):
             "role_id_list": "optional list",
             "group_id_list": "optional list",
             "job_id": "optional int",
-            "desc": "optional str"
+            "desc": "optional str",
+            "nickname": "optional str"
         }
 
         try:

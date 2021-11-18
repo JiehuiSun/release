@@ -180,7 +180,8 @@ class User():
         return user_dict
 
     @classmethod
-    def update_user(cls, id, role_id_list: list=[], group_id_list: list=[], job_id=None, desc=None):
+    def update_user(cls, id, role_id_list: list=[], group_id_list: list=[],
+                    job_id=None, desc=None, nickname=None):
         try:
             user_obj = DevUserModel.query.get(id)
         except Exception as e:
@@ -209,6 +210,8 @@ class User():
             user_obj.job = job_id
         if desc:
             user_obj.desc = desc
+        if nickname:
+            user_obj.nickname = nickname
 
         db.session.commit()
 
