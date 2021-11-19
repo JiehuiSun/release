@@ -21,8 +21,9 @@ class User():
     @classmethod
     def login(cls, username, password):
 
-        if not ldap_manager.bind_user(username, password):
-            raise ParamsError("登录失败, 用户名或密码错误或未授权, 如没有账户请联系运维开通")
+        if current_app.config["LDAP_LOGIN"]:
+            if not ldap_manager.bind_user(username, password):
+                raise ParamsError("登录失败, 用户名或密码错误或未授权, 如没有账户请联系运维开通")
 
         user_obj = DevUserModel.query.filter_by(is_deleted=False,
                                                 name=username).one_or_none()

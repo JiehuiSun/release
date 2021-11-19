@@ -45,6 +45,7 @@ class DefaultConfig(object):
     DOWNLOAD_HOST = ""
 
     # Ldap
+    LDAP_LOGIN = True
     LDAP_HOST = ""
     LDAP_PORT= 389
     LDAP_BASE_DN = ""
