@@ -315,6 +315,15 @@ class ProjectHost():
             hp_dict = tmp_dict.get(i["id"], {})
             if hp_dict:
                 i.update(hp_dict)
+            else:
+                a = {
+                    "hp_name": "",
+                    "host_id_list": [],
+                    "hp_env": "",
+                    "hp_dt_updated": "",
+                    "host_list": []
+                }
+                i.update(a)
 
             for x in i.get("host_id_list", []):
                 host_dict = host_dict_list.get(x)

@@ -54,3 +54,14 @@ class HostProject(db.Model):
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
+
+    def to_dict(self):
+        ret_dict = {}
+        for k in self.__table__.columns:
+            if k.name == "is_deleted":
+                continue
+            value = getattr(self, k.name)
+            if isinstance(value, datetime.datetime):
+                value = value.strftime('%Y-%m-%d %H:%M:%S')
+            ret_dict[k.name] = value
+        return ret_dict
