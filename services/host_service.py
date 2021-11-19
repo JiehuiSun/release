@@ -12,6 +12,7 @@ from .user_service import User
 from .project_service import Project
 from base.errors import ParamsError
 from utils import query_operate_ids
+from utils.time_utils import datetime_2_str_by_format
 
 
 class HostServer():
@@ -82,7 +83,7 @@ class HostServer():
         return
 
     @classmethod
-    def list_host(cls, keyword=None, page_num=1, page_size=999):
+    def list_host(cls, keyword=None, page_num=1, page_size=999, is_base=False):
         # host_obj_list = Hosts.query.filter_by(is_deleted=False)
         host_obj_list = Hosts.query
         host_obj_list = host_obj_list.order_by(Hosts.id.desc())
@@ -107,6 +108,14 @@ class HostServer():
             # host_dict["pkey"] = magic_key.encrypt(host_dict["pkey"]).decode()
             host_list.append(host_dict)
             user_id_list.append(host_dict["created_by_id"])
+
+        if is_base:
+            ret = {
+                "data_list": host_list,
+                "count": count
+            }
+
+            return ret
 
         user_data = User.list_user(user_id_list=user_id_list)
         user_dict_list = dict()
@@ -283,14 +292,34 @@ class ProjectHost():
             .filter(HostProject.project_id.in_(project_id_list))
 
         tmp_dict = dict()
+        host_id_list = list()
         for i in tmp_obj_list:
+            host_id_list.append(i.host_id)
             if i.project_id not in tmp_dict:
-                tmp_dict[i.project_id] = [i.host_id]
+                tmp_dict[i.project_id] = {
+                    "hp_name": i.name,
+                    "host_id_list": [i.host_id],
+                    "hp_env": i.env,
+                    "hp_dt_updated": datetime_2_str_by_format(i.dt_updated),
+                    "host_list": []
+                }
             else:
-                tmp_dict[i.project_id].append(i.host_id)
+                tmp_dict[i.project_id]["host_id_list"].append(i.host_id)
+
+        host_data = HostServer.list_host(is_base=True)
+        host_dict_list = dict()
+        for i in host_data["data_list"]:
+            host_dict_list[i["id"]] = i
 
         for i in project_data["data_list"]:
-            i["host_id_list"] = tmp_dict.get(i["id"], [])
+            hp_dict = tmp_dict.get(i["id"], {})
+            if hp_dict:
+                i.update(hp_dict)
+
+            for x in i.get("host_id_list", []):
+                host_dict = host_dict_list.get(x)
+                if host_dict:
+                    i["host_list"].append(host_dict)
         return project_data
 
     @classmethod
