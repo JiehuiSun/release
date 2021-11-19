@@ -168,7 +168,7 @@ class DevUserModel(db.Model):
     def to_dict(self):
         ret_dict = {}
         for k in self.__table__.columns:
-            if k.name == "is_deleted":
+            if k.name in ("is_deleted", "password"):
                 continue
             value = getattr(self, k.name)
             if isinstance(value, datetime.datetime):
