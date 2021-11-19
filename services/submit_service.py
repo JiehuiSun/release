@@ -165,3 +165,13 @@ class Submit():
             print(f">> Deploy Error, {str(e)}")
             cls.update_status(submit_id, 3)
         return
+
+    @classmethod
+    def query_submit(cls, id):
+        try:
+            submit_obj = SubmitLogModel.query.get(id)
+        except:
+            raise ParamsError("日志记录异常")
+
+        ret = submit_obj.to_dict()
+        return ret

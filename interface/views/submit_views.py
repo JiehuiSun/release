@@ -65,3 +65,7 @@ class SubmitProjectView(Api):
                                 submit_dict["env"])
 
         return self.ret()
+
+    def get(self):
+        submit_dict = Submit.query_submit(self.key)
+        return self.ret(data=submit_dict)
