@@ -213,14 +213,38 @@ class GitLab():
 
     @classmethod
     def pack_java(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):
-        return True, True
+        git_cmd = current_app.config["GIT_ABS_CMD"]
+        project = cls.gitlab().projects.get(project_id)
+        p_local_path = f"{pro_dir}/{project.name}"
+        if not os.path.exists(p_local_path):
+            project_url = project.ssh_url_to_repo.replace("op-gitlab.mumway.com", "gitlab.xiavan.cloud")
+            clone_cmd = f"{git_cmd} clone {project_url} {p_local_path}"
+            if os.system(f"{clone_cmd} >> {log_file}"):
+                return False, "打包异常, 项目克隆失败\n"
+
+        if not os.path.exists(f"{p_local_path}/ops_dev_path"):
+            os.system("mkdir ops_dev_path")
+        if os.system(f"cd {p_local_path} >> {log_file} 2>&1 && {git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1 &&/bin/bash {base_file} {env} >> {log_file} 2>&1"):
+            return False, "打包异常, Git错误或脚本执行错误\n"
+        ret_dir = f"{p_local_path}/ops_dev_path"
+
+        return True, ret_dir
 
     @classmethod
     def pack_php(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):
+        git_cmd = current_app.config["GIT_ABS_CMD"]
         project = cls.gitlab().projects.get(project_id)
-        tgz = project.repository_archive(branch)
+        p_local_path = f"{pro_dir}/{project.name}"
+        if not os.path.exists(p_local_path):
+            project_url = project.ssh_url_to_repo.replace("op-gitlab.mumway.com", "gitlab.xiavan.cloud")
+            clone_cmd = f"{git_cmd} clone {project_url} {p_local_path}"
+            if os.system(f"{clone_cmd} >> {log_file}"):
+                return False, "打包异常, 项目克隆失败\n"
 
-        return True, tgz
+        if os.system(f"cd {p_local_path} >> {log_file} 2>&1 && {git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1"):
+            return False, "打包异常, Git错误或脚本执行错误\n"
+
+        return True, p_local_path
 
     @classmethod
     def pack_go(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):

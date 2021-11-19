@@ -10,6 +10,7 @@ PACK_NAME=$3      #包名
 
 mvn -U clean
 mvn -U -Dmaven.test.skip=true -q compile package
+mv $(echo "$(ls -d ./*server)")/target/*.jar ./ops_dev_path
 
 # tar zcvf ../Release/javapack.tar.gz ordercenter-server.jar
 
