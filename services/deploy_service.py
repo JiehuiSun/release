@@ -44,6 +44,7 @@ class Deploy():
             ssh.put_file(tarfile_path, f'{path}/{tar_gz_file}')
             file_name = tar_gz_file.split(".tar.gz")[0]
             command = f'cd {path} && tar xf {path}/{tar_gz_file} &&cp -Rf {file_name}/* . && rm -rf {file_name} {tar_gz_file}'
+            command += ' &&SPUG_DST_DIR=$(pwd)'
 
             # 忽略
 
