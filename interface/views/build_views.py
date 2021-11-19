@@ -41,6 +41,10 @@ class BuildProjectView(Api):
 
         return self.ret(data=ret)
 
+    def get(self):
+        ret_data = Build.query_build(self.key)
+        return self.ret(data=ret_data)
+
 
 class BuildLogView(Api):
     """

@@ -27,7 +27,8 @@ class Build():
     """
     @classmethod
     def list_build(cls, keyword=None, user_id=None, type_id=None,
-                   group_id=None, env=None, page_num=1, page_size=999):
+                   group_id=None, env=None, page_num=1, page_size=999,
+                   project_id_list=[]):
         """
         制品库列表
 
@@ -49,6 +50,8 @@ class Build():
             project_params["group_id"] = group_id
         if type_id:
             project_params["type_id"] = type_id
+        if project_id_list:
+            project_params["id_list"] = project_id_list
 
         project_data = Project.list_project(**project_params)
         project_list = project_data["data_list"]
@@ -132,6 +135,14 @@ class Build():
             "count": project_data["count"]
         }
         return ret
+
+    @classmethod
+    def query_build(cls, project_id):
+        ret_data = cls.list_build(project_id_list=[project_id])
+        if ret_data and ret_data["data_list"]:
+            ret = ret_data["data_list"][0]
+            return ret
+        raise ParamsError("参数错误")
 
 
 class BuildLog():
