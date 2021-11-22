@@ -403,10 +403,6 @@ class RequirementStatus():
             title = ""
 
             if status_code == 1:
-                user_id_list = requirement_obj.test_user_ids.split(",")
-                user_id_list += requirement_obj.api_user_ids.split(",")
-                user_id_list += requirement_obj.web_user_ids.split(",")
-                user_id_list += requirement_obj.project_user_ids.split(",")
                 user_id_list += requirement_obj.product_user_ids.split(",")
                 group_data = Group.list_group(user_id_list=user_id_list)
                 for x in group_data["data_list"]:
