@@ -65,17 +65,12 @@ class Api(VerParams, Resp, View):
 
         如果有单独分页数的情况，重写即可
         """
-        page_num = self.data.get("page_num")
-        page_size = self.data.get("page_size")
-
-        if not page_num:
+        try:
+            self.data["page_num"] = int(self.data.get("page_num", 1))
+            self.data["page_size"] = int(self.data.get("page_size", 10))
+        except:
             self.data["page_num"] = 1
-        else:
-            self.data["page_num"] = int(self.data["page_num"])
-        if not page_size:
             self.data["page_size"] = 10
-        else:
-            self.data["page_size"] = int(self.data["page_size"])
 
         return
 
