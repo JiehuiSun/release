@@ -400,43 +400,69 @@ class RequirementStatus():
             # 修改实际时间
             msg = []
             group_webhook_url_list = []
+            title = ""
 
             if status_code == 1:
-                group_list = RequirementGroup.list_group(requirement_id)
-                group_webhook_url_list = [i["webhook_url"] for i in group_list]
+                user_id_list = requirement_obj.test_user_ids.split(",")
+                user_id_list += requirement_obj.api_user_ids.split(",")
+                user_id_list += requirement_obj.web_user_ids.split(",")
+                user_id_list += requirement_obj.project_user_ids.split(",")
+                user_id_list += requirement_obj.product_user_ids.split(",")
+                group_data = Group.list_group(user_id_list=user_id_list)
+                for x in group_data["data_list"]:
+                    if x["webhook_url"]:
+                        group_webhook_url_list.append(x["webhook_url"])
                 requirement_obj.dt_started = now_dt()
-                msg.append("项目立项")
-                msg.append(f"项目: {requirement_obj.name}")
-                msg.append("小伙伴们, 撸起袖子加油干吧!")
+                title = "项目立项"
+                msg.append("### 项目立项")
+                msg.append(f"**项目:** {requirement_obj.name}")
+                msg.append("###### 小伙伴们, 撸起袖子加油干吧!")
             elif status_code == 402:
-                group_list = RequirementGroup.list_group(requirement_id)
-                group_webhook_url_list = [i["webhook_url"] for i in group_list]
+                user_id_list = requirement_obj.api_user_ids.split(",")
+                user_id_list += requirement_obj.web_user_ids.split(",")
+                group_data = Group.list_group(user_id_list=user_id_list)
+                for x in group_data["data_list"]:
+                    if x["webhook_url"]:
+                        group_webhook_url_list.append(x["webhook_url"])
                 requirement_obj.dt_deved = now_dt()
-                msg.append("来活了")
-                msg.append(f"项目: {requirement_obj.name}")
-                msg.append("小伙伴们, 撸起袖子加油干吧!")
+                title = "来活了"
+                msg.append("### 来活了")
+                msg.append(f"**项目:** {requirement_obj.name}")
+                msg.append("###### 小伙伴们, 撸起袖子加油干吧!")
             elif status_code == 602:
                 if not RequirementProject.list_project(requirement_id):
                     raise ParamsError(f"请选择提测仓库")
                 requirement_obj.dt_tested = now_dt()
-                msg.append("申请提测")
-                msg.append(f"项目: {requirement_obj.name}")
-                msg.append("环境: test")
+                title = "申请提测"
+                msg.append("### 申请提测")
+                msg.append(f"**项目:** {requirement_obj.name}")
+                msg.append("\n**环境:** test")
                 group_data = Group.list_group(user_id_list=requirement_obj.test_user_ids.split(","))
                 for x in group_data["data_list"]:
-                    group_webhook_url_list.append(x["webhook_url"])
+                    if x["webhook_url"]:
+                        group_webhook_url_list.append(x["webhook_url"])
             elif status_code == 604:
                 requirement_obj.dt_released = now_dt()
-                msg.append("进入pre环境")
-                msg.append(f"项目: {requirement_obj.name}")
-                group_list = RequirementGroup.list_group(requirement_id)
-                group_webhook_url_list = [i["webhook_url"] for i in group_list]
+                title = "进入pre环境"
+                msg.append("### 进入pre环境")
+                msg.append(f"**项目:** {requirement_obj.name}")
+                user_id_list = requirement_obj.api_user_ids.split(",")
+                user_id_list += requirement_obj.web_user_ids.split(",")
+                group_data = Group.list_group(user_id_list=user_id_list)
+                for x in group_data["data_list"]:
+                    if x["webhook_url"]:
+                        group_webhook_url_list.append(x["webhook_url"])
             elif status_code == 801:
                 requirement_obj.dt_finished = now_dt()
-                msg.append("上线申请")
-                msg.append(f"项目: {requirement_obj.name}")
-                group_list = RequirementGroup.list_group(requirement_id)
-                group_webhook_url_list = [i["webhook_url"] for i in group_list]
+                title = "上线申请"
+                msg.append("### 上线申请")
+                msg.append(f"**项目:** {requirement_obj.name}")
+                user_id_list = requirement_obj.api_user_ids.split(",")
+                user_id_list += requirement_obj.web_user_ids.split(",")
+                group_data = Group.list_group(user_id_list=user_id_list)
+                for x in group_data["data_list"]:
+                    if x["webhook_url"]:
+                        group_webhook_url_list.append(x["webhook_url"])
                 # 运维
                 ops_group = Group.list_group(type_id=61)
                 for x in ops_group["data_list"]:
@@ -446,10 +472,14 @@ class RequirementStatus():
         except Exception as e:
             raise ParamsError(f"更新状态错误! {str(e)}")
 
-        cls.send_msg(requirement_obj.id, "\n".join(msg))
+        msg = {
+            "title": title,
+            "text": "\n".join(msg)
+        }
+        cls.send_msg(requirement_obj.id, group_webhook_url_list, msg)
         return
 
     @classmethod
-    def send_msg(cls, requirement_id, msg):
-        send_ding_errmsg()
+    def send_msg(cls, requirement_id, group_webhook_url_list, msg):
+        send_ding_errmsg(group_webhook_url_list, msg, msg_type="markdown")
         return

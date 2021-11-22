@@ -213,19 +213,25 @@ def async_func(f):
     return wrapper
 
 
-def send_ding_errmsg(webhook_url_list: list, message):
+def send_ding_errmsg(webhook_url_list: list, message: dict, msg_type="text"):
     """
     发送叮叮报警机器人
+    """
+    """
+    msg_type = text
+    message = {"content": "message content"}
+
+    msg_type = markdown
+    message = {"title": "title name", "text": "content"}
     """
     headers = {"Content-Type": "application/json ;charset=utf-8"}
     for i in webhook_url_list:
 
         data = {
-            "msgtype": "text",
-            "text": {
-                "content": message
-            }
+            "msgtype": msg_type,
         }
+        data[msg_type] = message
 
+        print(data)
         requests.post(i, headers=headers, data=json.dumps(data))
     return
