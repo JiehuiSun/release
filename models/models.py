@@ -5,10 +5,14 @@
 # Filename: models.py
 
 
+import json
 import datetime
 
+from flask import current_app
 from base import db
 from utils import time_utils
+
+from .cd_models import Hosts, HostProject
 
 
 WORK_TYPE = (
@@ -40,26 +44,47 @@ REQUIREMENT_STATUS = (
 
 REQUIREMENT_FLOW_DICT = (
     (0, "未开始"),
-    (1, "立项"),
-    (101, "需求确定"),
-    (102, "需求整理"),
-    (103, "需求完成"),
+    (1, "已立项"),
+    (2, "未开始"),
+    # (101, "需求确定"),
+    # (102, "需求整理"),
+    # (103, "需求完成"),
     (401, "待研发"),
     (402, "研发中"),
     (403, "研发完成"),
     (601, "待测试"),
     (602, "测试中"),
     (603, "测试完成"),
+    (604, "预发布"),
     (801, "待上线"),
     (802, "上线中"),
-    (803, "上线完成"),
+    (888, "已上线"),
+)
+
+REQUIREMENT_FLOW_NEXT_DICT = (
+    (0, "立项"),
+    (1, "立项"),
+    (2, "立项"),
+    # (101, "需求确定"),
+    # (102, "需求整理"),
+    # (103, "需求完成"),
+    (401, "进入开发"),
+    (402, "研发中"),
+    (403, "研发完成"),
+    (601, "提测"),
+    (602, "测试中"),
+    (603, "测试完成"),
+    (603, "预发布"),
+    (801, "上线"),
+    (802, "上线中"),
+    (888, "已上线"),
 )
 
 REQUIREMENT_FLOW_STATUS = (
-    (10, (0, 1, 101, 102, 103)),
+    (10, (0, 1, 2, 101, 102, 103)),
     (20, (401, 402, 403)),
-    (30, (601, 602, 603)),
-    (40, (801, 802, 803)),
+    (30, (601, 602, 603, 604)),
+    (40, (801, 802, 888)),
 )
 
 
@@ -82,17 +107,15 @@ JOB_TYPE = (
     (23, "IOS"),
     (24, "MiniApp"),
 
-    (31, "PDA"),
-    (31, "PDB"),
-    (31, "PDC"),
+    (31, "PD"),
+    (32, "UI"),
+    (33, "OP"),
 
-    (41, "TA"),
-    (41, "TB"),
-    (41, "TC"),
+    (41, "Test"),
 
-    (51, "PA"),
-    (51, "PB"),
-    (51, "PC"),
+    (51, "Project"),
+
+    (61, "CTO"),
 )
 
 
@@ -131,10 +154,50 @@ class GroupModel(db.Model):
 class DevUserModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False, comment="用户名")
-    job = db.Column(db.String(64), nullable=False, comment="工作")
+    password = db.Column(db.String(128), nullable=True, comment="密码")
+    job = db.Column(db.String(64), nullable=True, comment="工作")
     desc = db.Column(db.String(256), nullable=True, comment="简介")
-    # group_id = db.Column(db.Integer, nullable=False, comment="组ID")
-    email = db.Column(db.String(64), nullable=False, comment="邮箱")
+    nickname = db.Column(db.String(128), nullable=True, comment="昵称(默认真实姓名)")
+    role_ids = db.Column(db.String(256), nullable=True, comment="角色ID")
+    email = db.Column(db.String(64), nullable=True, comment="邮箱")
+    is_super = db.Column(db.Boolean, default=False)
+    is_deleted = db.Column(db.Boolean, default=False)
+    dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
+    dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
+
+    def to_dict(self):
+        ret_dict = {}
+        for k in self.__table__.columns:
+            if k.name in ("is_deleted", "password"):
+                continue
+            value = getattr(self, k.name)
+            if isinstance(value, datetime.datetime):
+                value = value.strftime('%Y-%m-%d %H:%M:%S')
+            ret_dict[k.name] = value
+        return ret_dict
+
+    # def __init__(self, username, password):
+        # self.username = name
+
+    def is_authenticated(self):
+        return True
+
+    def is_active(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return str(self.id)
+
+
+class RoleModel(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), nullable=False, comment="组名")
+    comment = db.Column(db.String(256), nullable=True, comment="备注")
+    type_id = db.Column(db.Integer, nullable=True, comment="类型")
+    menu_list = db.Column(db.Text, nullable=True, comment="菜单")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
@@ -147,6 +210,8 @@ class DevUserModel(db.Model):
             value = getattr(self, k.name)
             if isinstance(value, datetime.datetime):
                 value = value.strftime('%Y-%m-%d %H:%M:%S')
+            if k.name == "menu_list":
+                value = json.loads(value)
             ret_dict[k.name] = value
         return ret_dict
 
@@ -172,6 +237,7 @@ class ProjectModel(db.Model):
     type_id = db.Column(db.Integer, nullable=True, comment="类型: 10 后端,20 前端, 90 其他")
     source_id = db.Column(db.Integer, nullable=True, default=1, comment="来源: 1 gitlab")
     source_project_id = db.Column(db.Integer, nullable=True, comment="来源的项目ID")
+    job_id = db.Column(db.Integer, nullable=True, comment="开发语言ID(关联JOB_TYPE)")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
@@ -193,6 +259,15 @@ class ProjectModel(db.Model):
                     "name": dict(WORK_TYPE)[value]
                 }
                 ret_dict["type"] = type_dict
+            elif k.name == "job_id":
+                if not value:
+                    ret_dict["job"] = dict()
+                    continue
+                type_dict = {
+                    "id": value,
+                    "name": dict(JOB_TYPE)[value]
+                }
+                ret_dict["job"] = type_dict
             ret_dict[k.name] = value
         return ret_dict
 
@@ -224,9 +299,35 @@ class SubmitLogModel(db.Model):
     build_type = db.Column(db.Integer, nullable=False, comment="类型: 1 手动, 2 自动")
     submit_id = db.Column(db.Integer, nullable=True, comment="提交ID(关联DevUserModel)")
     file_path = db.Column(db.String(256), nullable=True, comment="tar包路径")
+    type_id = db.Column(db.Integer, nullable=True, comment="类型: 10 后端,20 前端, 90 其他")
+    group_id = db.Column(db.Integer, nullable=True, comment="组ID")
+    count = db.Column(db.Integer, nullable=True, default=1, comment="组ID")
+    log_text = db.Column(db.Text, nullable=True, comment="日志内容(先不分表)")
     is_deleted = db.Column(db.Boolean, default=False)
+    dt_build = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
+
+    def to_dict(self):
+        ret_dict = {}
+        for k in self.__table__.columns:
+            if k.name == "is_deleted":
+                continue
+            value = getattr(self, k.name)
+            if isinstance(value, datetime.datetime):
+                value = value.strftime('%Y-%m-%d %H:%M:%S')
+            elif k.name == "status":
+                if value is None:
+                    ret_dict["status"] = dict()
+                else:
+                    status_dict = {
+                        "code": value,
+                        "value": dict(LOG_STATUS)[value]
+                    }
+                    ret_dict["status"] = status_dict
+                continue
+            ret_dict[k.name] = value
+        return ret_dict
 
 
 class BuildLogModel(db.Model):
@@ -245,6 +346,8 @@ class BuildLogModel(db.Model):
     file_path = db.Column(db.String(256), nullable=True, comment="tar包路径")
     type_id = db.Column(db.Integer, nullable=True, comment="类型: 10 后端,20 前端, 90 其他")
     group_id = db.Column(db.Integer, nullable=True, comment="组ID")
+    log_text = db.Column(db.Text, nullable=True, comment="日志内容(先不分表)")
+    commit_text = db.Column(db.Text, nullable=True, comment="Commit信息(先不分表)")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
@@ -342,7 +445,7 @@ class RequirementModel(db.Model):
                 ret_dict["type"] = type_dict
 
             elif k.name == "status_code":
-                if not value:
+                if value is None:
                     ret_dict["status"] = dict()
                     continue
                 type_dict = {
@@ -385,7 +488,7 @@ class RequirementProjectModel(db.Model):
     dt_started = db.Column(db.DateTime, nullable=True, comment="开始时间")
     dt_finished = db.Column(db.DateTime, nullable=True, comment="完成时间")
     is_auto_deploy = db.Column(db.Boolean, default=False, comment="是否自动部署")
-    comment = db.Column(db.Text, nullable=False, comment="备注")
+    comment = db.Column(db.String(128), nullable=True, comment="备注")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)

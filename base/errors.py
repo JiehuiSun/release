@@ -34,12 +34,17 @@ class LogoutError(BaseError):
 
 
 class LoginExpiredError(BaseError):
-    errno = 11003
+    errno = 40801
     errmsg = '登录状态已过期，请重新登录'
 
 
+class TokenError(BaseError):
+    errno = 40801
+    errmsg = '非法请求'
+
+
 class NoTokenError(BaseError):
-    errno = 11004
+    errno = 40801
     errmsg = '请求header中缺少token'
 
 

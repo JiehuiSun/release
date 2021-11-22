@@ -66,19 +66,22 @@ class Project():
                 db.session.commit()
             except Exception as e:
                 db.session.rollback()
-                raise str(e)
+                raise ParamsError(str(e))
 
         return
 
     @classmethod
     def list_project(cls, type_id=None, keyword=None, group_ids=None, user_ids=None,
-                     id_list=None, need_git_info=True, page_num=1, page_size=999):
+                     id_list=None, need_git_info=True, page_num=1, page_size=999,
+                     group_id=None, is_base=False):
         """
         项目列表
         """
         project_obj_list = ProjectModel.query.filter_by(is_deleted=False)
         if type_id:
             project_obj_list = project_obj_list.filter_by(type_id=type_id)
+        if group_id:
+            group_ids = str(group_id)
         if keyword:
             project_obj_list = project_obj_list.filter(ProjectModel.name.like(f"%{keyword}%"))
         if group_ids:
@@ -99,6 +102,9 @@ class Project():
         for i in project_obj_list:
             source_project_id_list.append(i.source_project_id)
             project_list.append(i.to_dict())
+
+        if is_base:
+            need_git_info = False
 
         if project_list and need_git_info:
             # 由于同步项目写错地方了, 避免循环引用, 暂时内部引用
@@ -220,7 +226,7 @@ class Project():
                     db.session.flush()
             except Exception as e:
                 db.session.rollback()
-                raise str(e)
+                raise ParamsError(str(e))
         db.session.commit()
 
         return

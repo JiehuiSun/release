@@ -6,6 +6,7 @@
 
 from api import Api
 from account.services.user_service import APIUser
+from services.login_service import User
 
 
 class RegisterView(Api):
@@ -55,10 +56,13 @@ class LoginView(Api):
 
         self.ver_params()
 
-        flag, ret = APIUser.login(self.data["username"],
-                                  self.data["password"])
-        if not flag:
-            return self.ret(12002, ret)
+        try:
+            ret = User.login(self.data["username"],
+                             self.data["password"])
+        except Exception as e:
+            return self.ret(12002, f"登录失败, {str(e)}")
+        if not ret:
+            return self.ret(12002, f"登录失败")
         return self.ret(data=ret)
 
 
@@ -71,7 +75,8 @@ class LogoutView(Api):
             'errcode': 0,
             'errmsg': 'Logout ok',
         }
-        return self.data(data=ret)
+        User.logout()
+        return self.ret(data=ret)
 
 #
 # instance.add_url_rule('/login', view_func=Login.as_view('login'), methods=['POST'])

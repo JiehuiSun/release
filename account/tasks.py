@@ -5,10 +5,10 @@
 # Filename: tasks.py
 
 
-from utils import tasks
+# from utils import tasks
 
 
-@tasks(id='account.task_test', trigger='cron', hour=0, second=3, replace_existing=True)
+# @tasks(id='account.task_test', trigger='cron', hour=0, second=3, replace_existing=True)
 def task_test():
     """
     定时任务测试示例

@@ -8,7 +8,8 @@
 from base import db
 from base.errors import ParamsError, InvalidArgsError, DBError
 from models.models import (RequirementModel, RequirementProjectModel, RequirementCodeModel,
-                           REQUIREMENT_FLOW_STATUS, REQUIREMENT_FLOW_DICT)
+                           REQUIREMENT_FLOW_STATUS, REQUIREMENT_FLOW_DICT,
+                           REQUIREMENT_FLOW_NEXT_DICT)
 from . import handle_page
 from utils import query_operate_ids
 from utils.time_utils import now_dt
@@ -76,7 +77,7 @@ class Requirement():
 
         TODO type_id应该分几个层级，根据不同层级筛选不同节点的时间, 目前先用固定值做配置与筛选
         """
-        requirement_obj_list = RequirementModel.query.filter_by(is_deleted=False)
+        requirement_obj_list = RequirementModel.query.filter_by(is_deleted=False).order_by(RequirementModel.id.desc())
         if status_id:
             code_list = dict(REQUIREMENT_FLOW_STATUS)[int(status_id)]
             requirement_obj_list = requirement_obj_list.filter(RequirementModel.status_code.in_(code_list))
@@ -151,6 +152,8 @@ class Requirement():
             requirement_obj.desc = desc
         if delayed and delayed != requirement_obj.delayed:
             requirement_obj.delayed = delayed
+        if status_code and status_code < 10:
+            requirement_obj.status_code = status_code
         if dt_plan_started:
             requirement_obj.dt_plan_started = dt_plan_started
         if dt_plan_deved:
@@ -326,24 +329,59 @@ class RequirementStatusFlow():
     """
     @classmethod
     def get_next_status(cls, status_code):
+        """
+        TODO 为便于扩展, 应该循环状态流取状态节点，利用一样状态流的展示取下一个
+        """
+
+        """
+        # TODO 临时不用真实流程
         i = dict()
-        if not status_code:
+        if not status_code or status_code in (0, 2):
             i["next_status_code"] = 1
             i["next_status_name"] = "立项"
         elif status_code == 1:
             i["next_status_code"] = 401
             i["next_status_name"] = "进入开发"
-        elif status_code < 600:
-            i["next_status_code"] = 601
-            i["next_status_name"] = "提测"
-        elif status_code < 800:
-            i["next_status_code"] = 801
-            i["next_status_name"] = "上线"
-        else:
-            i["next_status_code"] = 888
-            i["next_status_name"] = "已上线"
 
+        if i:
+            return i
+
+        for x in REQUIREMENT_FLOW_DICT:
+            if status_code == x[0]:
+                index_n = REQUIREMENT_FLOW_DICT.index(x)
+                if index_n < len(REQUIREMENT_FLOW_DICT) - 1:
+                    next_index = index_n + 1
+                else:
+                    next_index = index_n
+                i["next_status_code"] = REQUIREMENT_FLOW_DICT[next_index][0]
+                i["next_status_name"] = dict(REQUIREMENT_FLOW_NEXT_DICT)[i["next_status_code"]]
+                return i
         return i
+        """
+        i = dict()
+        if not status_code or status_code in (0, 2):
+            i["next_status_code"] = 1
+            i["next_status_name"] = "立项"
+        elif status_code == 1:
+            i["next_status_code"] = 402
+            i["next_status_name"] = "进入开发"
+        elif status_code < 601:
+            i["next_status_code"] = 602
+            i["next_status_name"] = "提测"
+        elif status_code == 602:
+            i["next_status_code"] = 604
+            i["next_status_name"] = "进入Pre环境"
+        elif status_code == 604:
+            i["next_status_code"] = 801
+            i["next_status_name"] = "申请上线"
+        elif status_code == 801:
+            i["next_status_code"] = 888
+            i["next_status_name"] = "上线"
+        elif status_code == 888:
+            i["next_status_code"] = 888
+            i["next_status_name"] = "上线完成"
+        return i
+
 
 
 class RequirementStatus():
@@ -361,15 +399,17 @@ class RequirementStatus():
             # 修改实际时间
             if status_code == 1:
                 requirement_obj.dt_started = now_dt()
-            elif status_code == 401:
+            elif status_code == 402:
                 requirement_obj.dt_deved = now_dt()
-            elif status_code == 601:
+            elif status_code == 602:
+                if not RequirementProject.list_project(requirement_id):
+                    raise ParamsError(f"请选择提测仓库")
                 requirement_obj.dt_tested = now_dt()
             elif status_code == 801:
                 requirement_obj.dt_finished = now_dt()
 
             db.session.commit()
         except Exception as e:
-            raise ParamsError(f"Update Status Err! {str(e)}")
+            raise ParamsError(f"更新状态错误! {str(e)}")
 
         return

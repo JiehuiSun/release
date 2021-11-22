@@ -7,6 +7,7 @@
 
 import os
 import gitlab
+import tarfile
 import shutil
 from flask import current_app
 
@@ -83,37 +84,73 @@ class GitLab():
         return
 
     @classmethod
-    def clone_project(cls, name, tar_file_name, project_id, branch="master"):
+    def clone_project(cls, name, tar_file_name, project_id, branch="master", log_file=None, job_type=None, env="dev"):
         """
         同步项目，如果开通其他来源的项目，需以source_id区分处理
+        直接打好包
         """
+        if not log_file:
+            log_file = f"./{tar_file_name}.log"
+        with open(log_file, "a") as e:
+            e.write("Handle dir \n")
         repository_dir = current_app.config["REPOSITORY_DIR"]
         pro_dir = f"{repository_dir}/{name}"
         if not os.path.exists(pro_dir):
             os.mkdir(pro_dir)
 
+        # TODO
         tmp_dir = f"{pro_dir}/{name}"
-        if os.path.exists(tmp_dir):
-            shutil.rmtree(tmp_dir)
+        # if os.path.exists(tmp_dir):
+            # shutil.rmtree(tmp_dir)
+
+        with open(log_file, "a") as e:
+            e.write("git pull project..\n")
 
         try:
-            project = cls.gitlab().projects.get(project_id)
-            tgz = project.repository_archive(branch)
-        except Exception as e:
-            raise InvalidArgsError(f"Clone Err! {str(e)}")
+            t_name = f"pack_{job_type.lower()}"
+            base_file = f"./base/pack_scripts/{t_name}.sh"
+            if not os.path.isfile(base_file):
+                return False, "没有打包脚本\n"
+            base_file = os.path.abspath(base_file)
 
+            pack_func = getattr(cls, t_name)
+            if not pack_func:
+                return False, "项目语言脚本配置异常, 请检查项目及脚本配置以及打包入口\n"
+
+            # commit v2
+            tag, tgz = pack_func(project_id, branch, base_file, pro_dir, log_file, env, commit=None)
+            # project = cls.gitlab().projects.get(project_id)
+            # tgz = project.repository_archive(branch)
+            if not tag:
+                with open(log_file, "a") as e:
+                    e.write(tgz)
+                return False, "Build Err!\n"
+        except Exception as s:
+            # TODO 日志
+            with open(log_file, "a") as e:
+                e.write(">>: Error: pull project error..\n\n")
+            return False, "Clone Err! {str(s)}\n"
+
+        with open(log_file, "a") as e:
+            e.write("generate 'tar.gz' file..\n")
         tar_file_path = f"{pro_dir}/{tar_file_name}.tar.gz"
-        with open(tar_file_path, "wb") as t:
-            t.write(tgz)
+        # if job_type.lower() in ("web", "java"):
+        with tarfile.open(tar_file_path, "w:gz") as tar:
+            tar.add(tgz, arcname=os.path.basename(tar_file_name))
+        # else:
+        # with open(tar_file_path, "wb") as t:
+            # t.write(tgz)
 
-        if os.path.exists(tmp_dir):
-            shutil.rmtree(tmp_dir)
+        with open(log_file, "a") as e:
+            e.write(f"tar file ok. {tar_file_path}\n")
+        # if os.path.exists(tmp_dir):
+            # shutil.rmtree(tmp_dir)
 
         ret = {
             "file_name": tar_file_name,
             "path": tar_file_path.replace(f"{repository_dir}/", "")
         }
-        return ret
+        return True, ret
 
     @classmethod
     def list_project(cls):
@@ -138,3 +175,97 @@ class GitLab():
         except Exception as e:
             raise InvalidArgsError(f"Get Project Err! GitLab Config Err. {str(e)}")
         return project
+
+    @classmethod
+    def list_commit(cls, project_id, branch):
+        """
+        根据项目跟分支获取分支的commit最新列表
+        """
+        project = cls.get_project(project_id)
+        commits = project.commits.list(ref_name=branch, page=0, per_page=20)
+
+        return commits
+
+    @classmethod
+    def query_commit(cls, project_id, branch):
+        """
+        根据项目跟分支获取最新的commit信息
+        """
+        project = cls.get_project(project_id)
+        branch = project.branches.get(branch)
+        return branch.commit
+
+    @classmethod
+    def pack_python(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):
+        git_cmd = current_app.config["GIT_ABS_CMD"]
+        project = cls.gitlab().projects.get(project_id)
+        p_local_path = f"{pro_dir}/{project.name}"
+        if not os.path.exists(p_local_path):
+            project_url = project.ssh_url_to_repo.replace("op-gitlab.mumway.com", "gitlab.xiavan.cloud")
+            clone_cmd = f"{git_cmd} clone {project_url} {p_local_path}"
+            if os.system(f"{clone_cmd} >> {log_file}"):
+                return False, "打包异常, 项目克隆失败\n"
+
+        if os.system(f"cd {p_local_path} >> {log_file} 2>&1 && {git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1"):
+            return False, "打包异常, Git错误或脚本执行错误\n"
+
+        return True, p_local_path
+
+    @classmethod
+    def pack_java(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):
+        git_cmd = current_app.config["GIT_ABS_CMD"]
+        project = cls.gitlab().projects.get(project_id)
+        p_local_path = f"{pro_dir}/{project.name}"
+        if not os.path.exists(p_local_path):
+            project_url = project.ssh_url_to_repo.replace("op-gitlab.mumway.com", "gitlab.xiavan.cloud")
+            clone_cmd = f"{git_cmd} clone {project_url} {p_local_path}"
+            if os.system(f"{clone_cmd} >> {log_file}"):
+                return False, "打包异常, 项目克隆失败\n"
+
+        if not os.path.exists(f"{p_local_path}/ops_dev_path"):
+            os.system(f"mkdir {p_local_path}/ops_dev_path")
+        if os.system(f"cd {p_local_path} >> {log_file} 2>&1 && {git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1 &&/bin/bash {base_file} {env} >> {log_file} 2>&1"):
+            return False, "打包异常, Git错误或脚本执行错误\n"
+        ret_dir = f"{p_local_path}/ops_dev_path"
+
+        return True, ret_dir
+
+    @classmethod
+    def pack_php(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):
+        git_cmd = current_app.config["GIT_ABS_CMD"]
+        project = cls.gitlab().projects.get(project_id)
+        p_local_path = f"{pro_dir}/{project.name}"
+        if not os.path.exists(p_local_path):
+            project_url = project.ssh_url_to_repo.replace("op-gitlab.mumway.com", "gitlab.xiavan.cloud")
+            clone_cmd = f"{git_cmd} clone {project_url} {p_local_path}"
+            if os.system(f"{clone_cmd} >> {log_file}"):
+                return False, "打包异常, 项目克隆失败\n"
+
+        if os.system(f"cd {p_local_path} >> {log_file} 2>&1 && {git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1"):
+            return False, "打包异常, Git错误或脚本执行错误\n"
+
+        return True, p_local_path
+
+    @classmethod
+    def pack_go(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):
+        return True, True
+
+    @classmethod
+    def pack_web(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):
+        """
+        TODO 默认配置使用bash, 项目配置使用text的shell, 后期做兼容.
+        """
+        git_cmd = current_app.config["GIT_ABS_CMD"]
+        project = cls.gitlab().projects.get(project_id)
+        p_local_path = f"{pro_dir}/{project.name}"
+        if not os.path.exists(p_local_path):
+            project_url = project.ssh_url_to_repo.replace("op-gitlab.mumway.com", "gitlab.xiavan.cloud")
+            clone_cmd = f"{git_cmd} clone {project_url} {p_local_path}"
+            if os.system(f"{clone_cmd} >> {log_file}"):
+                return False, "打包异常, 项目克隆失败\n"
+
+        if os.system(f"cd {p_local_path} >> {log_file} 2>&1 && {git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1 &&/bin/bash {base_file} {env} >> {log_file} 2>&1"):
+            return False, "打包异常, Git错误或脚本执行错误\n"
+        ret_dir = f"{p_local_path}/dist"
+
+        return True, ret_dir

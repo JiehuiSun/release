@@ -5,7 +5,9 @@
 # Filename: submit_views.py
 
 
+import os
 from api import Api
+from flask import current_app
 
 from services import calculate_page
 from services.submit_service import Submit
@@ -21,7 +23,9 @@ class SubmitProjectView(Api):
             "group_id": "optional str",
             "env": "optional str",
             "page_num": "optional str",
-            "page_size": "optional str"
+            "page_size": "optional str",
+            "project_id": "optional str",
+            "branch": "optional str",
         }
 
         self.ver_params()
@@ -48,4 +52,20 @@ class SubmitProjectView(Api):
 
         self.ver_params()
 
+        # 记录
+        self.data["user_id"] = self.user_id
+        submit_dict = Submit.add_submit(**self.data)
+
+        #  交付(可做异步)
+        repository_dir = current_app.config["REPOSITORY_DIR"]
+        file_path = os.path.join(repository_dir, submit_dict["file_path"])
+        Submit.async_add_deploy(submit_dict["id"],
+                                submit_dict["project_id"],
+                                file_path,
+                                submit_dict["env"])
+
         return self.ret()
+
+    def get(self):
+        submit_dict = Submit.query_submit(self.key)
+        return self.ret(data=submit_dict)

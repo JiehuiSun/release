@@ -41,6 +41,10 @@ class BuildProjectView(Api):
 
         return self.ret(data=ret)
 
+    def get(self):
+        ret_data = Build.query_build(self.key)
+        return self.ret(data=ret_data)
+
 
 class BuildLogView(Api):
     """
@@ -51,6 +55,11 @@ class BuildLogView(Api):
             "project_id": "required str",
             "status_id": "optional str",
             "env": "optional str",
+            "type_id": "optional str",
+            "group_id": "optional str",
+            "page_num": "optional str",
+            "page_size": "optional str",
+            "branch": "optional str",
         }
 
         self.ver_params()
@@ -91,8 +100,22 @@ class BuildLogView(Api):
         """
 
         try:
-            BuildLog.add_build_log(**self.data)
+            self.data["user_id"] = self.user_id
+            build_log_id = BuildLog.add_build_log(**self.data)
         except Exception as e:
             return self.ret(errcode=100000, errmsg=str(e))
 
-        return self.ret()
+        return self.ret(data={"id": build_log_id})
+
+
+class BuildConsoleLogView(Api):
+    """
+    制品日志
+    """
+    def get(self):
+        try:
+            build_log = BuildLog.query_log(self.key)
+        except Exception as e:
+            return self.ret(errcode=100000, errmsg=str(e))
+
+        return self.ret(data=build_log)

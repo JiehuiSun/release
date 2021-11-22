@@ -7,16 +7,18 @@ from flask import request
 from flask import jsonify
 from flask import current_app
 from flask.views import View
+from flask import make_response
 
 from base import errors
 from base import session
+from base import redis
 
 from .req_framework import VerParams
 from .resp_framework import Resp
 
 
 class Api(VerParams, Resp, View):
-    NEED_LOGIN = False
+    NEED_LOGIN = True
 
     def __init__(self):
         self.__name__ = self.__class__.__name__
@@ -24,15 +26,21 @@ class Api(VerParams, Resp, View):
     def _get_token(self):
         token = request.headers.get('HTTP-X-TOKEN')
         if not token:
-            raise errors.NoTokenError
+            token = request.headers.get('Token')
+            if not token:
+                raise errors.NoTokenError
         return token
 
     def _identification(self):
         if self.NEED_LOGIN:
             self.token = self._get_token()
-            self.user_id = session.get_session(self.token)
-            if not self.user_id:
+            user_id = redis.client.get(self.token)
+            if not user_id:
                 raise errors.LoginExpiredError
+            try:
+                self.user_id = int(user_id)
+            except:
+                raise errors.TokenError
 
     def _handle_params(self):
         """
@@ -57,17 +65,12 @@ class Api(VerParams, Resp, View):
 
         如果有单独分页数的情况，重写即可
         """
-        page_num = self.data.get("page_num")
-        page_size = self.data.get("page_size")
-
-        if not page_num:
+        try:
+            self.data["page_num"] = int(self.data.get("page_num", 1))
+            self.data["page_size"] = int(self.data.get("page_size", 10))
+        except:
             self.data["page_num"] = 1
-        else:
-            self.data["page_num"] = int(self.data["page_num"])
-        if not page_size:
             self.data["page_size"] = 10
-        else:
-            self.data["page_size"] = int(self.data["page_size"])
 
         return
 
@@ -111,7 +114,14 @@ class Api(VerParams, Resp, View):
                 "errmsg": errors.BaseError.errmsg,
                 "data": {}
             }
-        return jsonify(result)
+        if isinstance(result, dict):
+            res = make_response(jsonify(result))
+            res.headers['Access-Control-Allow-Origin'] = '*'
+            res.headers['Access-Control-Allow-Method'] = '*'
+            res.headers['Access-Control-Allow-Headers'] = '*'
+            return res
+        else:
+            return result
 
     def __get_subpath(self, path):
         tail_slash = ''

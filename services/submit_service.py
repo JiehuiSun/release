@@ -9,12 +9,14 @@ import datetime
 
 from base import db
 from base.errors import ParamsError
-from models.models import BuildLogModel
+from models.models import BuildLogModel, SubmitLogModel
 from .project_service import Project
 from .user_service import User
 from .gitlab_service import GitLab
+from .deploy_service import Deploy
 from . import handle_page
 from utils.time_utils import str2tsp
+from utils import async_func
 
 
 class Submit():
@@ -34,7 +36,8 @@ class Submit():
         env_id: 环境CODE
         时间筛选待确定
         """
-        log_obj_list = BuildLogModel.query.filter_by(is_deleted=False)
+        log_obj_list = SubmitLogModel.query.filter_by(is_deleted=False) \
+            .order_by(SubmitLogModel.id.desc())
         if user_id:
             log_obj_list = log_obj_list.filter_by(creator=user_id)
         if type_id:
@@ -75,7 +78,7 @@ class Submit():
         user_dict_list = {
             0: {
                 "id": 0,
-                "name": "未知用户"
+                "name": "未知"
             }
         }
         for i in user_data["data_list"]:
@@ -105,5 +108,70 @@ class Submit():
         return ret
 
     @classmethod
-    def add_submit(cls, log_id):
+    def add_submit(cls, log_id, user_id=0):
+        try:
+            build_obj = BuildLogModel.query.get(log_id)
+        except Exception as e:
+            raise ParamsError("交付失败, 制品ID错误或已被删除")
+
+        s_params = {
+            "version_num": build_obj.version_num,
+            "title": build_obj.title,
+            "desc": build_obj.desc,
+            "env": build_obj.env,
+            "project_id": build_obj.project_id,
+            "branch": build_obj.branch,
+            "commit_hash": build_obj.commit_hash,
+            "status": 1,
+            "creator": user_id,
+            "build_type": build_obj.build_type,
+            "file_path": build_obj.file_path,
+            "submit_id": build_obj.submit_id,
+            "group_id": build_obj.group_id,
+            "type_id": build_obj.type_id,
+            "dt_build": build_obj.dt_created,
+        }
+
+        submit_log_obj = SubmitLogModel(**s_params)
+        db.session.add(submit_log_obj)
+        db.session.commit()
+
+        return submit_log_obj.to_dict()
+
+    @classmethod
+    def update_status(cls, id, status_id):
+        submit_obj = SubmitLogModel.query.get(id)
+        submit_obj.status = status_id
+        db.session.commit()
         return
+
+    @classmethod
+    @async_func
+    def async_add_deploy(cls, submit_id, project_id, file_path, env):
+        """
+        TODO log
+        """
+        try:
+            from application import app
+            with app.app_context():
+                ret = Deploy.add_deploy(project_id, file_path, env)
+                if ret:
+                    cls.update_status(submit_id, 3)
+                    print(f"Deploy Error, {ret}")
+                    return
+
+                cls.update_status(submit_id, 2)
+        except Exception as e:
+            print(f">> Deploy Error, {str(e)}")
+            cls.update_status(submit_id, 3)
+        return
+
+    @classmethod
+    def query_submit(cls, id):
+        try:
+            submit_obj = SubmitLogModel.query.get(id)
+        except:
+            raise ParamsError("日志记录异常")
+
+        ret = submit_obj.to_dict()
+        return ret
