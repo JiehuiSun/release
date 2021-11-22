@@ -351,10 +351,21 @@ class ProjectHost():
                 "script_text": "",
                 "env": "",
                 "dt_created": "",
+                "host_list": []
             }
         else:
             host_id_list = [i.host_id for i in hp_obj_list]
             ret = hp_obj_list[0].to_dict()
             ret["host_id_list"] = host_id_list
+            ret["host_list"] = list()
 
+        host_data = HostServer.list_host(is_base=True)
+        host_dict_list = dict()
+        for i in host_data["data_list"]:
+            host_dict_list[i["id"]] = i
+
+        for x in ret["host_id_list"]:
+            host_dict = host_dict_list.get(x)
+            if host_dict:
+                ret["host_list"].append(host_dict)
         return ret
