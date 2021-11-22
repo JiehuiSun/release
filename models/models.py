@@ -21,6 +21,7 @@ WORK_TYPE = (
     (30, "产品"),
     (40, "测试"),
     (50, "项目经理"),
+    (60, "运维"),
     (90, "其他"),
 )
 
@@ -115,7 +116,9 @@ JOB_TYPE = (
 
     (51, "Project"),
 
-    (61, "CTO"),
+    (61, "Ops"),
+
+    (91, "Manage"),
 )
 
 
@@ -125,6 +128,7 @@ class GroupModel(db.Model):
     desc = db.Column(db.String(256), nullable=True, comment="简介")
     parent_id = db.Column(db.Integer, default=0, nullable=False, comment="父ID")
     email = db.Column(db.String(64), nullable=False, comment="邮箱")
+    webhook_url = db.Column(db.String(256), nullable=True, comment="钉钉群机器人")
     type_id = db.Column(db.Integer, nullable=True, comment="类型: 10 后端, 20 前端, 90 其他")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)

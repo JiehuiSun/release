@@ -211,3 +211,21 @@ def async_func(f):
         thr = Thread(target=f, args=args, kwargs=kwargs)
         thr.start()
     return wrapper
+
+
+def send_ding_errmsg(webhook_url_list: list, message):
+    """
+    发送叮叮报警机器人
+    """
+    headers = {"Content-Type": "application/json ;charset=utf-8"}
+    for i in webhook_url_list:
+
+        data = {
+            "msgtype": "text",
+            "text": {
+                "content": message
+            }
+        }
+
+        requests.post(i, headers=headers, data=json.dumps(data))
+    return

@@ -11,8 +11,9 @@ from models.models import (RequirementModel, RequirementProjectModel, Requiremen
                            REQUIREMENT_FLOW_STATUS, REQUIREMENT_FLOW_DICT,
                            REQUIREMENT_FLOW_NEXT_DICT)
 from . import handle_page
-from utils import query_operate_ids
+from utils import query_operate_ids, send_ding_errmsg
 from utils.time_utils import now_dt
+from services.user_service import Group
 
 
 class Requirement():
@@ -397,19 +398,58 @@ class RequirementStatus():
             requirement_obj.status_code = status_code
 
             # 修改实际时间
+            msg = []
+            group_webhook_url_list = []
+
             if status_code == 1:
+                group_list = RequirementGroup.list_group(requirement_id)
+                group_webhook_url_list = [i["webhook_url"] for i in group_list]
                 requirement_obj.dt_started = now_dt()
+                msg.append("项目立项")
+                msg.append(f"项目: {requirement_obj.name}")
+                msg.append("小伙伴们, 撸起袖子加油干吧!")
             elif status_code == 402:
+                group_list = RequirementGroup.list_group(requirement_id)
+                group_webhook_url_list = [i["webhook_url"] for i in group_list]
                 requirement_obj.dt_deved = now_dt()
+                msg.append("来活了")
+                msg.append(f"项目: {requirement_obj.name}")
+                msg.append("小伙伴们, 撸起袖子加油干吧!")
             elif status_code == 602:
                 if not RequirementProject.list_project(requirement_id):
                     raise ParamsError(f"请选择提测仓库")
                 requirement_obj.dt_tested = now_dt()
+                msg.append("申请提测")
+                msg.append(f"项目: {requirement_obj.name}")
+                msg.append("环境: test")
+                group_data = Group.list_group(user_id_list=requirement_obj.test_user_ids.split(","))
+                for x in group_data["data_list"]:
+                    group_webhook_url_list.append(x["webhook_url"])
+            elif status_code == 604:
+                requirement_obj.dt_released = now_dt()
+                msg.append("进入pre环境")
+                msg.append(f"项目: {requirement_obj.name}")
+                group_list = RequirementGroup.list_group(requirement_id)
+                group_webhook_url_list = [i["webhook_url"] for i in group_list]
             elif status_code == 801:
                 requirement_obj.dt_finished = now_dt()
+                msg.append("上线申请")
+                msg.append(f"项目: {requirement_obj.name}")
+                group_list = RequirementGroup.list_group(requirement_id)
+                group_webhook_url_list = [i["webhook_url"] for i in group_list]
+                # 运维
+                ops_group = Group.list_group(type_id=61)
+                for x in ops_group["data_list"]:
+                    group_webhook_url_list.append(x["webhook_url"])
 
             db.session.commit()
         except Exception as e:
             raise ParamsError(f"更新状态错误! {str(e)}")
 
+        cls.send_msg(requirement_obj.id, "\n".join(msg))
+        return
+
+    @classmethod
+    def send_msg(cls, requirement_id, msg):
+        send_ding_errmsg()
         return
