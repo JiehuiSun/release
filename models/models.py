@@ -409,6 +409,8 @@ class RequirementModel(db.Model):
     web_user_ids = db.Column(db.String(256), nullable=True, comment="前端用户")
     api_user_ids = db.Column(db.String(256), nullable=True, comment="后端用户")
     test_user_ids = db.Column(db.String(256), nullable=True, comment="测试用户")
+    # 前端leader让使用这个字段找组
+    group_ids = db.Column(db.String(256), nullable=True, comment="所有人员的组ID")
 
     # plan
     dt_plan_started = db.Column(db.DateTime, nullable=True, default=time_utils.now_dt, comment="计划启动时间")
