@@ -6,6 +6,7 @@ from flask_mail import Mail
 from flask_apscheduler import APScheduler
 # from flask_ldap3_login import LDAP3LoginManager
 from flask_simpleldap import LDAP
+from queue import Queue
 
 
 db = SQLAlchemy()
@@ -16,6 +17,7 @@ mail = Mail()
 apscheduler = APScheduler()
 # ldap_manager = LDAP3LoginManager()
 ldap_manager = LDAP()
+tasks_queue = Queue(20)
 
 
 class DefaultConfig(object):
@@ -55,6 +57,10 @@ class DefaultConfig(object):
     LDAP_USER_OBJECT_FILTER = ""
 
     TOKEN_DURATION = 3600 * 48
+
+    # 目前使用一个线程异步消费任务(目前主要针对项目构建)
+    # 如需多线程配置TASK_THREAD_NUM即可
+    TASK_THREAD_NUM = 1
 
 # local_configs目的: 因为线上、测试、开发环境的配置不同，
 # 所以每个环境可以有自己的local_configs来覆盖configs里的DefaultConfig

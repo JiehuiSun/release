@@ -75,6 +75,28 @@ class Requirement():
         db.session.add(requirement)
         db.session.commit()
 
+        # 直接立项发送消息
+        if status_code == 1
+            msg = []
+            group_webhook_url_list = []
+            title = ""
+            group_data = Group.list_group(
+                group_id_list=group_id_list,
+                type_id=30)
+            for x in group_data["data_list"]:
+                if x["webhook_url"]:
+                    group_webhook_url_list.append(x["webhook_url"])
+            requirement_obj.dt_started = now_dt()
+            title = "项目立项"
+            msg.append("#### 恭喜您！已成功立项！")
+            msg.append(f"**项目:** {name}")
+            msg = {
+                "title": title,
+                "text": "\n".join(msg)
+            }
+
+            RequirementStatus.send_msg(requirement.id, group_webhook_url_list, msg)
+
         return
 
     @classmethod

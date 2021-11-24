@@ -8,7 +8,7 @@
 import os
 
 from flask import current_app
-from base import db
+from base import db, redis
 from base.errors import ParamsError
 from models.models import BuildLogModel, LOG_STATUS
 from .project_service import Project
@@ -290,7 +290,12 @@ class BuildLog():
                 "job_type": job_type,
                 "env": env
             }
-            cls.async_clone_project(**params_d)
+            # cls.async_clone_project(**params_d)
+            # 为了最快形式转队列, 先从这里切入
+            # TODO 应该在日志记录生成之前或用特殊字段标记是否执行
+            # 判断该项目+分支+环境如果在队列中, 则不再添加构建队列
+            task_name = f"{build_id}|{name}|{tar_file_name}|{source_project_id}|{branch}|{log_file}|{job_type}|{env}"
+            redis.client.rpush("build_tasks", task_name)
         except Exception as s:
             build_obj = BuildLogModel.query.get(build_id)
             build_obj.status = 3
@@ -302,7 +307,8 @@ class BuildLog():
         return build_obj.id
 
     @classmethod
-    @async_func
+    # @async_func
+    # 构建队列消费这个方法即可
     def async_clone_project(cls, build_log_id, name, tar_file_name, source_project_id,
                             branch, log_file, job_type, env):
         try:
@@ -340,6 +346,10 @@ class BuildLog():
                 e.write(f">>: Build Error: {str(s)}\n")
             raise ParamsError(f"Build Err! Clone Err {str(s)}")
         return
+
+    @classmethod
+    def clone_build_project(cls, *args, **kwargs):
+        cls.async_clone_project(*args)
 
     @classmethod
     def query_log(cls, log_id):

@@ -1,5 +1,6 @@
 import os
 import logging
+from threading import Thread
 from flask import Flask
 from werkzeug.routing import BaseConverter
 from flask_cors import CORS
@@ -12,6 +13,7 @@ from base import mail
 from base import apscheduler
 from base import tasks
 from base import ldap_manager
+# from base import tasks_queue
 from account.helpers import algorithm_auth_login
 
 
@@ -103,8 +105,28 @@ def config_apscheduler(app):
     apscheduler.init_app(app)
     apscheduler.start()
 
+
 def config_ldap(app):
     ldap_manager.init_app(app)
 
+
+class Consumer(Thread):
+    """
+    """
+    def run(self):
+        while True:
+            task_info = redis.client.blpop("build_tasks", timeout=3600)
+            if task_info:
+                from services.build_service import BuildLog
+                BuildLog.clone_build_project(*task_info[1].decode().split("|"))
+
 app = create_app()
 tasks.InitTasks()
+
+try:
+    task_thread_num = configs.DefaultConfig.TASK_THREAD_NUM
+except:
+    task_thread_num = 1
+for i in range(task_thread_num):
+    c = Consumer()
+    c.start()
