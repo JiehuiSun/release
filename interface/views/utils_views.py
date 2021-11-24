@@ -32,3 +32,11 @@ class DownLoadView(Api):
             print(str(e))
             raise ParamsError(f"文件下载失败, {str(e)}")
         return resp
+
+
+class GitlabActionView(Api):
+    """
+    git动作webhook
+    """
+    def post(self):
+        return self.ret()
