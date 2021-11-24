@@ -54,4 +54,39 @@ class GitlabActionView(Api):
     git动作webhook
     """
     def post(self):
+        if not self.data or self.data.get("object_kind") != "push":
+            return self.ret(errcode=100000, errmsg="非法请求")
+
+        source_project_id = self.data.get("project_id")
+        branch = self.data.get("ref")
+        if not source_project_id or not branch:
+            return self.ret(errcode=100000, errmsg="非法请求")
+
+        project_obj = Project.query_project(source_project_id,
+                                            need_detail=False,
+                                            is_local_project=False)
+        branch = branch.split("/")[-1]
+
+        if not project_obj:
+            return self.ret(errcode=100000, errmsg="项目未同步")
+
+        # TODO 获取现有需求, 判断是否自动构建
+        params_ab = {
+            "project_id": project_obj.id,
+            "status_id_ge": 604,
+            "status_id_te": 601,
+            "branch": branch
+        }
+        need_auto_build_list = Requirement.list_auto_build_requirement(**params_ab)
+        if not need_auto_build_list:
+            print(f"{project_obj.name}-{branch}没有需要自动构建的需求")
+            return self.ret()
+
+        from services.build_service import BuildLog
+        for i in need_auto_build_list:
+            env = i["env"]
+            project_id = i["project_id"]
+            # 构建
+            BuildLog.add_build_log(project_id, branch, env, user_id=9999)
+
         return self.ret()

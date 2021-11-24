@@ -39,6 +39,8 @@ class Requirement():
             requirement_dict["desc"] = desc
         if status_code:
             requirement_dict["status_code"] = status_code
+            if status_code == 1:
+                requirement_dict["dt_started"] = now_dt()
         if delayed:
             requirement_dict["delayed"] = delayed
         if dt_plan_started:
@@ -76,7 +78,7 @@ class Requirement():
         db.session.commit()
 
         # 直接立项发送消息
-        if status_code == 1
+        if status_code == 1:
             msg = []
             group_webhook_url_list = []
             title = ""
@@ -86,7 +88,6 @@ class Requirement():
             for x in group_data["data_list"]:
                 if x["webhook_url"]:
                     group_webhook_url_list.append(x["webhook_url"])
-            requirement_obj.dt_started = now_dt()
             title = "项目立项"
             msg.append("#### 恭喜您！已成功立项！")
             msg.append(f"**项目:** {name}")
@@ -132,6 +133,49 @@ class Requirement():
             "count": count
         }
         return ret
+
+    @classmethod
+    def list_auto_build_requirement(cls, project_id, status_id_le,
+                                    status_id_ge, branch):
+        req_project_obj_list = RequirementProjectModel.query \
+            .filter_by(project_id=project_id,
+                       is_deleted=False,
+                       branch=branch).all()
+
+        req_project_dict_list = dict()
+        for i in req_project_obj_list:
+            if i.requirement_id in req_project_dict_list:
+                req_project_dict_list[i.requirement_id].append(i)
+            else:
+                req_project_dict_list[i.requirement_id] = [i]
+
+        if not req_project_dict_list:
+            return
+
+        req_obj_list = RequirementModel.query \
+            .filter(RequirementModel.status_code >= status_id_lt,
+                    RequirementModel.status_code <= status_id_gt,
+                    RequirementModel.id.in_(list(req_project_dict_list.keys()))).all()
+
+        if not req_obj_list:
+            return
+
+        ret_list = list()
+        for i in req_obj_list:
+            ret_dict = dict()
+            if i.status_code - 600 < 10:
+                ret_dict["env"] = "test"
+            elif i.status_code == 604:
+                ret_dict["env"] = "pre"
+            else:
+                continue
+
+            for x in req_project_dict_list[i.id]:
+                ret_dict["project_id"] = x.project_id
+                ret_list.append(ret_dict)
+
+        return ret_list
+
 
     @classmethod
     def query_requirement(cls, requirement_id):

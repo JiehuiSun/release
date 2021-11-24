@@ -140,8 +140,11 @@ class Project():
         return ret
 
     @classmethod
-    def query_project(cls, project_id, need_detail=True):
-        project_obj = ProjectModel.query.get(project_id)
+    def query_project(cls, project_id, need_detail=True, is_local_project=True):
+        if is_local_project:
+            project_obj = ProjectModel.query.get(project_id)
+        else:
+            project_obj = ProjectModel.query.filter_by(source_project_id=project_id).one_or_none()
 
         if not project_obj or project_obj.is_deleted:
             raise ParamsError("Project Not Exist or Use Delete")
