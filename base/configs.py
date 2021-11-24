@@ -6,7 +6,7 @@ from flask_mail import Mail
 from flask_apscheduler import APScheduler
 # from flask_ldap3_login import LDAP3LoginManager
 from flask_simpleldap import LDAP
-from queue import Queue
+# from queue import Queue
 
 
 db = SQLAlchemy()
@@ -17,7 +17,7 @@ mail = Mail()
 apscheduler = APScheduler()
 # ldap_manager = LDAP3LoginManager()
 ldap_manager = LDAP()
-tasks_queue = Queue(20)
+# tasks_queue = Queue(20)
 
 
 class DefaultConfig(object):

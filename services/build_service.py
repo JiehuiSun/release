@@ -294,6 +294,10 @@ class BuildLog():
             # 为了最快形式转队列, 先从这里切入
             # TODO 应该在日志记录生成之前或用特殊字段标记是否执行
             # 判断该项目+分支+环境如果在队列中, 则不再添加构建队列
+            build_tasks_num = redis.client.llen("build_tasks")
+            if build_tasks_num >= 20:
+                # 队列达到20, 日志/提示
+                print(f"目前构建任务队列数: {build_tasks_num}")
             task_name = f"{build_id}|{name}|{tar_file_name}|{source_project_id}|{branch}|{log_file}|{job_type}|{env}"
             redis.client.rpush("build_tasks", task_name)
         except Exception as s:
