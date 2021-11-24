@@ -11,8 +11,8 @@ from .views.requirement_views import (RequirementViews, RequirementGroupViews,
                                       RequirementCodeViews, RequirementProjectViews)
 from .views.submit_views import SubmitProjectView
 from .views.build_views import BuildProjectView, BuildLogView, BuildConsoleLogView
-from .views.gitlab_views import BranchView, SyncProjectView
-from .views.utils_views import DownLoadView, GitlabActionView
+from .views.gitlab_views import BranchView, SyncProjectView, GitlabActionView
+from .views.utils_views import DownLoadView
 from .views.host_views import HostView, HostProjectView
 
 

@@ -47,3 +47,11 @@ class SyncProjectView(Api):
         except Exception as e:
             return self.ret(errcode=100000, errmsg=f"{str(e)}")
         return self.ret()
+
+
+class GitlabActionView(Api):
+    """
+    git动作webhook
+    """
+    def post(self):
+        return self.ret()
