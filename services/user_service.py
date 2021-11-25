@@ -94,6 +94,7 @@ class User():
     def list_user(cls, keyword=None, user_id_list: list = [], group_id=None,
                   type_id=None, page_num=1, page_size=999, need_detail=False):
         user_obj_list = DevUserModel.query.filter_by(is_deleted=False)
+        user_obj_list = user_obj_list.filter(DevUserModel.id != 9999)
 
         if keyword:
             user_obj_list = user_obj_list.filter(or_(DevUserModel.name.like(f"%{keyword}%"),
