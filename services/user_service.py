@@ -193,8 +193,9 @@ class User():
         if role_id_list:
             user_obj.role_ids = ",".join(str(i) for i in role_id_list)
         if group_id_list:
-            old_group_obj = UserGroupModel.query.filter_by(user_id=id).all()
-            old_group_id_list = [i.group_id for i in old_group_obj]
+            old_group_obj = UserGroupModel.query.filter_by(user_id=id,
+                                                           is_deleted=False).all()
+            old_group_id_list = [str(i.group_id) for i in old_group_obj]
             id_data = query_operate_ids(old_group_id_list, group_id_list)
             if id_data["add_id_list"]:
                 for i in id_data["add_id_list"]:
@@ -207,7 +208,7 @@ class User():
             if id_data["del_id_list"]:
                 tmp_o = UserGroupModel.query.filter(
                     UserGroupModel.user_id.in_(id_data["del_id_list"])
-                )
+                ).filter_by(is_deleted=False)
                 tmp_o.update({"is_deleted": True}, synchronize_session=False)
         if job_id:
             user_obj.job = job_id
