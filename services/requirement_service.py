@@ -153,8 +153,8 @@ class Requirement():
             return
 
         req_obj_list = RequirementModel.query \
-            .filter(RequirementModel.status_code >= status_id_lt,
-                    RequirementModel.status_code <= status_id_gt,
+            .filter(RequirementModel.status_code >= status_id_le,
+                    RequirementModel.status_code <= status_id_ge,
                     RequirementModel.id.in_(list(req_project_dict_list.keys()))).all()
 
         if not req_obj_list:

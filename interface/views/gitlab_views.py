@@ -9,6 +9,7 @@ from api import Api
 
 from services.project_service import Project
 from services.gitlab_service import GitLab
+from services.requirement_service import Requirement
 
 
 class BranchView(Api):
@@ -72,9 +73,9 @@ class GitlabActionView(Api):
 
         # TODO 获取现有需求, 判断是否自动构建
         params_ab = {
-            "project_id": project_obj.id,
+            "project_id": project_obj["id"],
             "status_id_ge": 604,
-            "status_id_te": 601,
+            "status_id_le": 601,
             "branch": branch
         }
         need_auto_build_list = Requirement.list_auto_build_requirement(**params_ab)
