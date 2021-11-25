@@ -85,7 +85,14 @@ class HostServer():
     @classmethod
     def list_host(cls, keyword=None, page_num=1, page_size=999, is_base=False):
         # host_obj_list = Hosts.query.filter_by(is_deleted=False)
-        host_obj_list = Hosts.query
+        host_obj_list = Hosts.query.all()
+        host_id_list = dict()
+        for i in host_obj_list:
+            tmp_name = f"{i.hostname}|{i.username}"
+            if tmp_name not in host_id_list:
+                host_id_list[tmp_name] = i.id
+
+        host_obj_list = Hosts.query.filter(Hosts.id.in_(list(host_id_list.values())))
         host_obj_list = host_obj_list.order_by(Hosts.id.desc())
         if keyword:
             host_obj_list = host_obj_list.filter(
