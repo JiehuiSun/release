@@ -208,7 +208,7 @@ class User():
                     db.session.add(g)
             if id_data["del_id_list"]:
                 tmp_o = UserGroupModel.query.filter(
-                    UserGroupModel.user_id.in_(id_data["del_id_list"])
+                    UserGroupModel.group_id.in_(id_data["del_id_list"])
                 ).filter_by(is_deleted=False)
                 tmp_o.update({"is_deleted": True}, synchronize_session=False)
         if job_id:
