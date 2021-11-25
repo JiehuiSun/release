@@ -215,7 +215,8 @@ class Requirement():
                            dt_plan_tested=None, dt_plan_released=None,
                            dt_plan_finished=None, project_user_id_list=None,
                            product_user_id_list=None, web_user_id_list=None,
-                           api_user_id_list=None, test_user_id_list=None):
+                           api_user_id_list=None, test_user_id_list=None,
+                           test_env="test"):
         """
         更新需求(基本信息)
         """
@@ -253,6 +254,8 @@ class Requirement():
             requirement_obj.web_user_ids = ",".join(str(i) for i in web_user_id_list)
         if test_user_id_list is not None:
             requirement_obj.test_user_ids = ",".join(str(i) for i in test_user_id_list)
+
+        requirement_obj.test_env = test_env
 
         db.session.commit()
 
