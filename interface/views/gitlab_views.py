@@ -85,10 +85,18 @@ class GitlabActionView(Api):
             return self.ret()
 
         from services.build_service import BuildLog
+        need_list = dict()
         for i in need_auto_build_list:
-            env = i["env"]
-            project_id = i["project_id"]
+            params_a = {
+                "project_id": i["project_id"],
+                "env": i["env"],
+                "branch": branch
+            }
+            p_b_e = f"{params_a['project_id']}|{params_a['env']}|{params_a['branch']}"
+            if p_b_e not in need_list:
+                need_list[p_b_e] = params_a
+        for i in need_list.values():
             # 构建
-            BuildLog.add_build_log(project_id, branch, env, user_id=9999)
+            BuildLog.add_build_log(user_id=9999, **i)
 
         return self.ret()
