@@ -67,7 +67,9 @@ class Group():
             group_obj_list = group_obj_list.filter(GroupModel.id.in_(group_id_list))
 
         if user_id_list is not None:
-            u_tmp_obj_list = UserGroupModel.query.filter(UserGroupModel.user_id.in_(user_id_list))
+            u_tmp_obj_list = UserGroupModel.query \
+                .filter(UserGroupModel.user_id.in_(user_id_list)) \
+                .filter_by(is_deleted=False)
             group_id_list = [i.group_id for i in u_tmp_obj_list]
             if group_id_list:
                 group_obj_list = group_obj_list.filter(GroupModel.id.in_(group_id_list))

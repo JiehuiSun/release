@@ -128,7 +128,7 @@ class Requirement():
         requirement_list = list()
         for i in requirement_obj_list:
             r_dict = i.to_dict()
-            requirement_list.append(i.to_dict())
+            requirement_list.append(r_dict)
 
         ret = {
             "data_list": requirement_list,
