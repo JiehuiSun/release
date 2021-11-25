@@ -81,7 +81,7 @@ class GitlabActionView(Api):
         }
         need_auto_build_list = Requirement.list_auto_build_requirement(**params_ab)
         if not need_auto_build_list:
-            print(f"{project_obj.name}-{branch}没有需要自动构建的需求")
+            print(f"{project_obj['name']}-{branch}没有需要自动构建的需求")
             return self.ret()
 
         from services.build_service import BuildLog
