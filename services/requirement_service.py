@@ -166,7 +166,7 @@ class Requirement():
         for i in req_obj_list:
             ret_dict = dict()
             if i.status_code - 600 < 10:
-                ret_dict["env"] = i.test_env
+                ret_dict["env"] = i.test_env or "test"
             elif i.status_code == 604:
                 ret_dict["env"] = "pre"
             else:
