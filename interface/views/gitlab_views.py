@@ -54,6 +54,7 @@ class GitlabActionView(Api):
     """
     git动作webhook
     """
+    NEED_LOGIN = False
     def post(self):
         if not self.data or self.data.get("object_kind") != "push":
             return self.ret(errcode=100000, errmsg="非法请求")
