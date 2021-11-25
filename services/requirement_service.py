@@ -14,6 +14,7 @@ from . import handle_page
 from utils import query_operate_ids, send_ding_errmsg
 from utils.time_utils import now_dt
 from services.user_service import Group
+from services.build_service import BuildLog
 
 
 class Requirement():
@@ -502,8 +503,9 @@ class RequirementStatus():
                 msg.append(f"**项目:** {requirement_obj.name}")
                 msg.append("###### 小伙伴们, 撸起袖子加油干吧!")
             elif status_code == 602:
-                if not RequirementProject.list_project(requirement_id):
-                    raise ParamsError(f"请选择提测仓库")
+                req_project_list = RequirementProject.list_project(requirement_id)
+                if not req_project_list:
+                    raise ParamsError(f"请配置提测仓库")
                 requirement_obj.dt_tested = now_dt()
                 title = "申请提测"
                 msg.append("#### 申请提测")
@@ -515,6 +517,13 @@ class RequirementStatus():
                 for x in group_data["data_list"]:
                     if x["webhook_url"]:
                         group_webhook_url_list.append(x["webhook_url"])
+
+                # 自动构建
+                for i in req_project_list:
+                    project_id = i["project_id"]
+                    branch = i["branch"]
+                # 构建
+                BuildLog.add_build_log(project_id, branch, "test", user_id=9999)
             elif status_code == 604:
                 requirement_obj.dt_released = now_dt()
                 title = "进入pre环境"
@@ -526,6 +535,14 @@ class RequirementStatus():
                 for x in group_data["data_list"]:
                     if x["webhook_url"]:
                         group_webhook_url_list.append(x["webhook_url"])
+
+                # 自动构建
+                req_project_list = RequirementProject.list_project(requirement_id)
+                for i in req_project_list:
+                    project_id = i["project_id"]
+                    branch = i["branch"]
+                # 构建
+                BuildLog.add_build_log(project_id, branch, "pre", user_id=9999)
             elif status_code == 801:
                 requirement_obj.dt_finished = now_dt()
                 title = "上线申请"
