@@ -184,7 +184,7 @@ class BuildLog():
                 continue
             user_dict_list[i["id"]] = {
                 "id": i["id"],
-                "name": i["name"]
+                "name": i["nickname"] or i["name"]
             }
 
         for i in log_list:
