@@ -27,12 +27,13 @@ class Requirement():
                         dt_plan_tested=None, dt_plan_released=None,
                         dt_plan_finished=None, project_user_id_list=None,
                         product_user_id_list=None, web_user_id_list=None,
-                        api_user_id_list=None, test_user_id_list=None):
+                        api_user_id_list=None, test_user_id_list=None, test_env="test"):
         """
         新增需求(基本信息)
         """
         requirement_dict = {
             "name": name,
+            "test_env": test_env
         }
 
         user_id_list = list()
@@ -165,7 +166,7 @@ class Requirement():
         for i in req_obj_list:
             ret_dict = dict()
             if i.status_code - 600 < 10:
-                ret_dict["env"] = "test"
+                ret_dict["env"] = i.test_env
             elif i.status_code == 604:
                 ret_dict["env"] = "pre"
             else:
@@ -523,7 +524,7 @@ class RequirementStatus():
                     project_id = i["project_id"]
                     branch = i["branch"]
                 # 构建
-                BuildLog.add_build_log(project_id, branch, "test", user_id=9999)
+                BuildLog.add_build_log(project_id, branch, requirement_obj.test_env, user_id=9999)
             elif status_code == 604:
                 requirement_obj.dt_released = now_dt()
                 title = "进入pre环境"
