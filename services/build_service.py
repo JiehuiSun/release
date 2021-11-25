@@ -103,7 +103,7 @@ class Build():
                 continue
             user_dict_list[i["id"]] = {
                 "id": i["id"],
-                "name": i["name"]
+                "name": i["nickname"] or i["name"]
             }
 
         # 整合数据
