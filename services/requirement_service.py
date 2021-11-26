@@ -466,6 +466,9 @@ class RequirementStatusFlow():
         elif status_code == 604:
             i["next_status_code"] = 801
             i["next_status_name"] = "申请上线"
+        elif status_code == 605:
+            i["next_status_code"] = 801
+            i["next_status_name"] = "申请上线"
         elif status_code == 801:
             i["next_status_code"] = 888
             i["next_status_name"] = "上线"
