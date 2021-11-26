@@ -312,11 +312,9 @@ class ProjectHost():
             tmp_n = f"{i.project_id}|{i.env}"
             if tmp_n not in h_list:
                 h_list[tmp_n] = [i.host_id]
-                h_dict_list[tmp_n] = [i.to_dict()]
                 h_id_list.append(i.id)
             else:
                 h_list[tmp_n].append(i.host_id)
-                h_dict_list[tmp_n].append(i.to_dict())
 
         params_d = {
             "need_git_info": False,
@@ -328,13 +326,15 @@ class ProjectHost():
             if i["id"] not in project_id_list:
                 project_id_list[i["id"]] = i
 
-            params_d = {
-                "is_base": True,
-            }
+        params_d = {
+            "is_base": True,
+        }
         if host_keyword:
             params_d["keyword"] = host_keyword
         host_data = HostServer.list_host(**params_d)
-        host_id_list = [i["id"] for i in host_data["data_list"]]
+        for i in host_data["data_list"]:
+            host_id_list.append(i["id"])
+            h_dict_list[i["id"]] = i.to_dict()
 
         host_obj_list = HostProject.query.filter_by(is_deleted=False) \
             .filter(HostProject.id.in_(h_id_list))
@@ -362,9 +362,11 @@ class ProjectHost():
                 "host_id_list": h_list.get(f"{i.project_id}|{i.env}", []),
                 "hp_env": i.env,
                 "hp_dt_updated": datetime_2_str_by_format(i.dt_updated),
-                "host_list": h_dict_list.get(f"{i.project_id}|{i.env}", []),
                 "project_id": i.project_id,
+                "host_list": []
             }
+            for i in tmp_dict["host_id_list"]:
+                tmp_dict["host_list"] += h_dict_list.get(i, []),
 
             project_dict = project_id_list.get(i.project_id)
             if project_dict:
