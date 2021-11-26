@@ -341,12 +341,10 @@ class ProjectHost():
         if keyword:
             host_obj_list = host_obj_list.filter(HostProject.name.like(f"%{keyword}%"))
 
-        if project_id_list:
-            host_obj_list = host_obj_list \
+        host_obj_list = host_obj_list \
             .filter(HostProject.project_id.in_(list(project_id_list.keys())))
 
-        if host_id_list:
-            host_obj_list = host_obj_list \
+        host_obj_list = host_obj_list \
             .filter(HostProject.host_id.in_(host_id_list))
 
         count = host_obj_list.count()
