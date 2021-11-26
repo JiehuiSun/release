@@ -90,7 +90,9 @@ class Project():
             project_obj_list = project_obj_list.filter(ProjectModel.id.in_(id_list))
 
         if user_ids is not None:
-            u_tmp_obj_list = UserGroupModel.query.filter(UserGroupModel.user_id.in_(user_ids.split(",")))
+            u_tmp_obj_list = UserGroupModel.query \
+                .filter(UserGroupModel.user_id.in_(user_ids.split(","))) \
+                .filter_by(is_deleted=False)
             group_id_list = [i.group_id for i in u_tmp_obj_list]
             project_obj_list = project_obj_list.filter(ProjectModel.group_id.in_(group_id_list))
 
