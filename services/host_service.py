@@ -300,7 +300,7 @@ class ProjectHost():
 
         host_obj_list = HostProject.query.filter_by(is_deleted=False)
         if env:
-            host_obj_list = host_obj_list.filter_by(env=env).all()
+            host_obj_list = host_obj_list.filter_by(env=env)
         if keyword:
             host_obj_list = host_obj_list.filter(HostProject.name.like(f"%{keyword}%"))
         host_obj_list = host_obj_list.all()
