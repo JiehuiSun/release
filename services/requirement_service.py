@@ -57,19 +57,19 @@ class Requirement():
             requirement_dict["dt_plan_finished"] = dt_plan_finished
         if project_user_id_list:
             requirement_dict["project_user_ids"] = ",".join(str(i) for i in project_user_id_list)
-            user_id_list += requirement_dict["project_user_ids"]
+            user_id_list += project_user_id_list
         if product_user_id_list:
             requirement_dict["product_user_ids"] = ",".join(str(i) for i in product_user_id_list)
-            user_id_list += requirement_dict["product_user_ids"]
+            user_id_list += product_user_id_list
         if web_user_id_list:
             requirement_dict["web_user_ids"] = ",".join(str(i) for i in web_user_id_list)
-            user_id_list += requirement_dict["web_user_ids"]
+            user_id_list += web_user_id_list
         if api_user_id_list:
             requirement_dict["api_user_ids"] = ",".join(str(i) for i in api_user_id_list)
-            user_id_list += requirement_dict["api_user_ids"]
+            user_id_list += api_user_id_list
         if test_user_id_list:
             requirement_dict["test_user_ids"] = ",".join(str(i) for i in test_user_id_list)
-            user_id_list += requirement_dict["test_user_ids"]
+            user_id_list += test_user_id_list
 
         group_data = Group.list_group(user_id_list=user_id_list)
         group_id_list = [i["id"] for i in group_data["data_list"]]
@@ -254,6 +254,17 @@ class Requirement():
             requirement_obj.web_user_ids = ",".join(str(i) for i in web_user_id_list)
         if test_user_id_list is not None:
             requirement_obj.test_user_ids = ",".join(str(i) for i in test_user_id_list)
+
+        user_id_list = list()
+        user_id_list += project_user_id_list
+        user_id_list += product_user_id_list
+        user_id_list += api_user_id_list
+        user_id_list += web_user_id_list
+        user_id_list += test_user_id_list
+
+        group_data = Group.list_group(user_id_list=user_id_list)
+        group_id_list = [i["id"] for i in group_data["data_list"]]
+        requirement_obj.group_ids = ",".join(str(i) for i in group_id_list)
 
         requirement_obj.test_env = test_env
 
@@ -559,7 +570,7 @@ class RequirementStatus():
                     if x["webhook_url"]:
                         group_webhook_url_list.append(x["webhook_url"])
                 # 运维
-                ops_group = Group.list_group(type_id=61)
+                ops_group = Group.list_group(type_id=60)
                 for x in ops_group["data_list"]:
                     group_webhook_url_list.append(x["webhook_url"])
 
@@ -571,6 +582,7 @@ class RequirementStatus():
             "title": title,
             "text": "\n".join(msg)
         }
+        group_webhook_url_list = list(set(group_webhook_url_list))
         cls.send_msg(requirement_obj.id, group_webhook_url_list, msg)
         return
 
