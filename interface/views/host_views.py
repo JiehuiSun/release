@@ -107,6 +107,9 @@ class HostProjectView(Api):
             "keyword": "optional str",
             "page_num": "optional str",
             "page_size": "optional str",
+            "project_keyword": "optional str",
+            "host_keyword": "optional str",
+            "env": "optional str",
         }
 
         self.ver_params()
@@ -168,6 +171,7 @@ class HostProjectView(Api):
     def delete(self):
         self.params_dict = {
             "project_id": "required int",
+            "env": "required str",
         }
 
         self.ver_params()

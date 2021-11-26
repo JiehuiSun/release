@@ -83,7 +83,8 @@ class HostServer():
         return
 
     @classmethod
-    def list_host(cls, keyword=None, page_num=1, page_size=999, is_base=False):
+    def list_host(cls, keyword=None, page_num=1, page_size=999, is_base=False,
+                  id_list: list=[]):
         # host_obj_list = Hosts.query.filter_by(is_deleted=False)
         host_obj_list = Hosts.query.all()
         host_id_list = dict()
@@ -102,6 +103,9 @@ class HostServer():
                     Hosts.desc.like(f"%{keyword}%"),
                 )
             )
+
+        if id_list:
+            host_obj_list = host_obj_list.filter(Hosts.id.in_(id_list))
 
         count = host_obj_list.count()
         host_obj_list = handle_page(host_obj_list, page_num, page_size)
@@ -224,7 +228,7 @@ class ProjectHost():
         # del
         if id_data["del_id_list"]:
             for i in id_data["del_id_list"]:
-                cls.del_host(project_id, i)
+                cls.del_host(project_id, i, env)
 
         # add
         if id_data["add_id_list"]:
@@ -270,7 +274,7 @@ class ProjectHost():
         return
 
     @classmethod
-    def del_host(cls, project_id, host_id=None):
+    def del_host(cls, project_id, host_id=None, env=None):
         """
         根据项目ID跟主机ID做唯一处理(不做批量)
         """
@@ -278,6 +282,8 @@ class ProjectHost():
                                              is_deleted=False)
         if host_id:
             hp_obj = hp_obj.filter_by(host_id=host_id)
+        if env:
+            hp_obj = hp_obj.filter_by(env=env)
 
         if hp_obj:
             hp_obj.update({"is_deleted": True}, synchronize_session=False)
@@ -375,32 +381,22 @@ class ProjectHost():
         return ret
 
     @classmethod
-    def query_host(cls, project_id):
+    def query_host(cls, id):
         try:
-            project_id = int(project_id)
+            project_id = int(id)
         except:
             raise ParamsError("非法请求")
 
-        hp_obj_list = HostProject.query.filter_by(project_id=project_id,
+        hp_obj_list = HostProject.query.filter_by(id=id,
                                                   is_deleted=False).all()
+
         if not hp_obj_list:
-            ret = {
-                "name": "",
-                "project_id": project_id,
-                "host_id_list": [],
-                "path": "",
-                "service_path": "",
-                "ignore_text": "",
-                "script_text": "",
-                "env": "",
-                "dt_created": "",
-                "host_list": []
-            }
-        else:
-            host_id_list = [i.host_id for i in hp_obj_list]
-            ret = hp_obj_list[0].to_dict()
-            ret["host_id_list"] = host_id_list
-            ret["host_list"] = list()
+            raise ParamsError("配置不存在或已被删除")
+
+        host_id_list = [i.host_id for i in hp_obj_list]
+        ret = hp_obj_list[0].to_dict()
+        ret["host_id_list"] = host_id_list
+        ret["host_list"] = list()
 
         host_data = HostServer.list_host(is_base=True)
         host_dict_list = dict()
