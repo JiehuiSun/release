@@ -282,61 +282,87 @@ class ProjectHost():
         return
 
     @classmethod
-    def list_host(cls, keyword=None, page_num=None, page_size=None):
-        params_d = {
-            "need_git_info": False
-        }
-        if keyword:
-            params_d["keyword"] = keyword
-        if page_num:
-            params_d["page_num"] = page_num
-        if page_size:
-            params_d["page_size"] = page_size
-        project_data = Project.list_project(**params_d)
+    def list_host(cls, keyword=None, page_num=None, page_size=None,
+                  project_keyword=None, host_keyword=None):
 
-        project_id_list = [i["id"] for i in project_data["data_list"]]
-        tmp_obj_list = HostProject.query.filter_by(is_deleted=False) \
-            .filter(HostProject.project_id.in_(project_id_list))
-
-        tmp_dict = dict()
+        project_id_list = dict()
         host_id_list = list()
-        for i in tmp_obj_list:
-            host_id_list.append(i.host_id)
-            if i.project_id not in tmp_dict:
-                tmp_dict[i.project_id] = {
-                    "hp_name": i.name,
-                    "host_id_list": [i.host_id],
-                    "hp_env": i.env,
-                    "hp_dt_updated": datetime_2_str_by_format(i.dt_updated),
-                    "host_list": []
-                }
+
+        host_obj_list = HostProject.query.filter_by(is_deleted=False).all()
+        h_list = dict()
+        h_id_list = list()
+        h_dict_list = dict()
+        for i in host_obj_list:
+            tmp_n = f"{i.project_id}|{i.env}"
+            if tmp_n not in h_list:
+                h_list[tmp_n] = [i.host_id]
+                h_dict_list[tmp_n] = [i.to_dict()]
+                h_id_list.append(i.id)
             else:
-                tmp_dict[i.project_id]["host_id_list"].append(i.host_id)
+                h_list[tmp_n].append(i.host_id)
+                h_dict_list[tmp_n].append(i.to_dict())
 
-        host_data = HostServer.list_host(is_base=True)
-        host_dict_list = dict()
-        for i in host_data["data_list"]:
-            host_dict_list[i["id"]] = i
+        if project_keyword:
+            params_d = {
+                "need_git_info": False,
+                "keyword": project_keyword
+            }
+            project_data = Project.list_project(**params_d)
+            for i in project_data["data_list"]:
+                if i["id"] not in project_id_list:
+                    project_id_list[i["id"]] = i
 
-        for i in project_data["data_list"]:
-            hp_dict = tmp_dict.get(i["id"], {})
-            if hp_dict:
-                i.update(hp_dict)
-            else:
-                a = {
-                    "hp_name": "",
-                    "host_id_list": [],
-                    "hp_env": "",
-                    "hp_dt_updated": "",
-                    "host_list": []
-                }
-                i.update(a)
+        if host_keyword:
+            params_d = {
+                "is_base": True,
+                "keyword": host_keyword
+            }
+            host_data = HostServer.list_host(**params_d)
+            host_id_list = [i["id"] for i in host_data["data_list"]]
 
-            for x in i.get("host_id_list", []):
-                host_dict = host_dict_list.get(x)
-                if host_dict:
-                    i["host_list"].append(host_dict)
-        return project_data
+        host_obj_list = HostProject.query.filter_by(is_deleted=False) \
+            .filter(HostProject.id.in_(h_id_list))
+        if keyword:
+            host_obj_list = host_obj_list.filter(HostProject.name.like(f"%{keyword}%"))
+
+        if project_id_list:
+            host_obj_list = host_obj_list \
+            .filter(HostProject.project_id.in_(list(project_id_list.keys())))
+
+        if host_id_list:
+            host_obj_list = host_obj_list \
+            .filter(HostProject.host_id.in_(host_id_list))
+
+        count = host_obj_list.count()
+
+        host_obj_list = handle_page(host_obj_list, page_num, page_size)
+
+        ret_list = list()
+        host_id_list = list()
+        for i in host_obj_list:
+            tmp_dict = {
+                "hp_id": i.id,
+                "hp_name": i.name,
+                "host_id_list": h_list.get(f"{i.project_id}|{i.env}", []),
+                "hp_env": i.env,
+                "hp_dt_updated": datetime_2_str_by_format(i.dt_updated),
+                "host_list": h_dict_list.get(f"{i.project_id}|{i.env}", []),
+                "project_id": i.project_id,
+            }
+
+            project_dict = project_id_list.get(i.project_id)
+            if project_dict:
+                tmp_dict["name"] = project_dict["name"]
+                tmp_dict["desc"] = project_dict["desc"]
+
+            ret_list.append(tmp_dict)
+
+        ret = {
+            "data_list": ret_list,
+            "count": count
+        }
+
+        return ret
 
     @classmethod
     def query_host(cls, project_id):
