@@ -370,6 +370,7 @@ class ProjectHost():
             if project_dict:
                 tmp_dict["name"] = project_dict["name"]
                 tmp_dict["desc"] = project_dict["desc"]
+                tmp_dict["id"] = project_dict["id"]
 
             ret_list.append(tmp_dict)
 
