@@ -147,7 +147,7 @@ class HostProjectView(Api):
 
     def put(self):
         self.params_dict = {
-            # "id": "required int",
+            "id": "optional int",
             "name": "required str",
             "host_id_list": "required list",
             "project_id": "required int",

@@ -174,9 +174,10 @@ class ProjectHost():
     def add_host(cls, name, host_id_list: list, project_id, path, env, is_add=True,
                  service_path=None, ignore_text=None, script_text=None, user_id=None):
         host_project_obj = HostProject.query.filter_by(is_deleted=False,
-                                                       project_id=project_id).all()
+                                                       project_id=project_id,
+                                                       env=env).all()
         if host_project_obj and is_add:
-            raise ParamsError("该仓库项目已配置主机信息, 可去编辑")
+            raise ParamsError(f"该仓库项目的{env}环境已配置主机信息, 可去编辑")
 
         tmp_dict = {
             "name": name,
@@ -204,9 +205,17 @@ class ProjectHost():
 
     @classmethod
     def update_host(cls, project_id, name=None, host_id_list: list=[],
-                    path=None, env=None, service_path=None,
+                    path=None, env=None, service_path=None, id=None,
                     ignore_text=None, script_text=None, user_id=None):
-        hp_obj = HostProject.query.filter_by(project_id=project_id,
+        if not id:
+            raise ParamsError("修改配置未更新至最新版")
+
+        hp_obj = HostProject.query.get(id)
+        if not hp_obj:
+            raise ParamsError("该配置不存在或已删除")
+
+        hp_obj = HostProject.query.filter_by(project_id=hp_obj.project_id,
+                                             env=hp_obj.env,
                                              is_deleted=False).all()
 
         old_id_list = [i.host_id for i in hp_obj]
@@ -225,7 +234,6 @@ class ProjectHost():
                 "path": path,
                 "env": env,
                 "host_id_list": id_data["add_id_list"],
-                "is_add": False
             }
             if service_path:
                 tmp_dict["service_path"] = service_path
@@ -239,27 +247,23 @@ class ProjectHost():
 
         # change
         need_update_id_list = list(set(old_id_list) & set(host_id_list))
-        for i in need_update_id_list:
-            hp_add_obj = HostProject.query.filter_by(is_deleted=False,
-                                                     project_id=project_id,
-                                                     host_id=i).one_or_none()
-            if not hp_add_obj:
-                continue
-
+        hp_update_obj_list = HostProject.query \
+            .filter(HostProject.id.in_(need_update_id_list)).all()
+        for i in hp_update_obj_list:
             if name:
-                hp_add_obj.name = name
+                i.name = name
             if path:
-                hp_add_obj.path = path
+                i.path = path
             if env:
-                hp_add_obj.env = env
+                i.env = env
             if service_path:
-                hp_add_obj.service_path = service_path
+                i.service_path = service_path
             if ignore_text:
-                hp_add_obj.ignore_text = ignore_text
+                i.ignore_text = ignore_text
             if script_text:
-                hp_add_obj.script_text = script_text
+                i.script_text = script_text
             if user_id:
-                hp_add_obj.created_by_id = user_id
+                i.created_by_id = user_id
 
         db.session.commit()
 
@@ -283,12 +287,18 @@ class ProjectHost():
 
     @classmethod
     def list_host(cls, keyword=None, page_num=None, page_size=None,
-                  project_keyword=None, host_keyword=None):
+                  project_keyword=None, host_keyword=None, env=None):
 
         project_id_list = dict()
         host_id_list = list()
 
-        host_obj_list = HostProject.query.filter_by(is_deleted=False).all()
+        host_obj_list = HostProject.query.filter_by(is_deleted=False)
+        if env:
+            host_obj_list = host_obj_list.filter_by(env=env).all()
+        if keyword:
+            host_obj_list = host_obj_list.filter(HostProject.name.like(f"%{keyword}%"))
+        host_obj_list = host_obj_list.all()
+
         h_list = dict()
         h_id_list = list()
         h_dict_list = dict()
