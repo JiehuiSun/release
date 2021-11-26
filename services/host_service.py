@@ -334,7 +334,7 @@ class ProjectHost():
         host_data = HostServer.list_host(**params_d)
         for i in host_data["data_list"]:
             host_id_list.append(i["id"])
-            h_dict_list[i["id"]] = i.to_dict()
+            h_dict_list[i["id"]] = i
 
         host_obj_list = HostProject.query.filter_by(is_deleted=False) \
             .filter(HostProject.id.in_(h_id_list))
@@ -365,8 +365,8 @@ class ProjectHost():
                 "project_id": i.project_id,
                 "host_list": []
             }
-            for i in tmp_dict["host_id_list"]:
-                tmp_dict["host_list"] += h_dict_list.get(i, []),
+            for x in tmp_dict["host_id_list"]:
+                tmp_dict["host_list"] += h_dict_list.get(x, []),
 
             project_dict = project_id_list.get(i.project_id)
             if project_dict:
