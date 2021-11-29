@@ -171,8 +171,12 @@ class BuildLog():
 
         log_list = list()
         user_id_list = list()
+        # down
+        h = current_app.config["DOWNLOAD_HOST"]
+        a = "/api/interface/v1/utils/download/"
         for i in log_obj_list:
             log_dict = i.to_dict()
+            log_dict["download_url"] = f"{h}{a}?file={log_dict['file_path']}"
             log_dict["version_num"] = log_dict["title"]
             user_id_list.append(log_dict["creator"])
             log_list.append(log_dict)
@@ -404,7 +408,7 @@ class BuildLog():
         ret["commit_list"] = ret["commit_text"].splitlines()
         ret["version_num"] = ret["title"]
         ret["operator_name"] = user_name
-        ret["download_url"] = f"{h}{a}{p}"
+        ret["download_url"] = f"{h}{a}?file={p}"
 
         ret["duration"] = str2tsp(ret["dt_updated"]) - str2tsp(ret["dt_created"])
         ret["fetch_duration"] = ret["duration"]

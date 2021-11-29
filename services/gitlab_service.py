@@ -269,7 +269,10 @@ class GitLab():
             return False, f"打包异常, Git错误或脚本执行错误, 错误代码{a}\n"
         ret_dir = f"{p_local_path}/dist"
         if not os.path.exists(ret_dir):
-            os.system(f"mkdir {ret_dir}")
+            ret_dir = f"{p_local_path}/dist_tmp"
+            if not os.path.exists(ret_dir):
+                os.system(f"mkdir {ret_dir}")
+            os.system(f"rm -Rvf {ret_dir}/*")
             os.system(f"cp -R `find {p_local_path} -type d -path {p_local_path}/node_modules -prune -o -print | sed 1d ` {ret_dir}")
 
         return True, ret_dir
