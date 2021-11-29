@@ -561,6 +561,16 @@ class RequirementStatus():
                     branch = i["branch"]
                 # 构建
                 BuildLog.add_build_log(project_id, branch, "pre", user_id=9999)
+            elif status_code == 605:
+                requirement_obj.dt_released = now_dt()
+                title = "已封板"
+                msg.append("#### 已封板")
+                msg.append(f"**项目:** {requirement_obj.name}")
+                group_data = Group.list_group(
+                    group_id_list=group_id_list)
+                for x in group_data["data_list"]:
+                    if x["webhook_url"]:
+                        group_webhook_url_list.append(x["webhook_url"])
             elif status_code == 801:
                 requirement_obj.dt_finished = now_dt()
                 title = "上线申请"

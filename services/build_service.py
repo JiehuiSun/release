@@ -343,12 +343,15 @@ class BuildLog():
                 # query log
                 db.session.commit()
         except Exception as s:
-            build_obj = BuildLogModel.query.get(build_log_id)
-            build_obj.status = 3
-            db.session.commit()
-            with open(log_file, "a") as e:
-                e.write(f">>: Build Error: {str(s)}\n")
-            raise ParamsError(f"Build Err! Clone Err {str(s)}")
+            from base import db
+            from application import app
+            with app.app_context():
+                build_obj = BuildLogModel.query.get(build_log_id)
+                build_obj.status = 3
+                db.session.commit()
+                with open(log_file, "a") as e:
+                    e.write(f">>: Build Error: {str(s)}\n")
+                raise ParamsError(f"Build Err! Clone Err {str(s)}")
         return
 
     @classmethod
