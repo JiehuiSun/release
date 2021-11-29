@@ -195,6 +195,7 @@ class BuildLog():
                     "name": "未知"
                 }
             i["operator"] = user_dict
+            i["operator_name"] = user_dict["name"]
 
             i["duration"] = str2tsp(i["dt_updated"]) - str2tsp(i["dt_created"])
             i["fetch_duration"] = str2tsp(i["dt_updated"]) - str2tsp(i["dt_created"])
@@ -386,7 +387,7 @@ class BuildLog():
         # user
         try:
             user_dict = User.query_user(log_obj.creator)
-            user_name = user_dict["name"]
+            user_name = user_dict["nick_name"] or user_dict["name"]
         except:
             user_name = "未知"
 
