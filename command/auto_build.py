@@ -22,7 +22,12 @@ class Consumer(Thread):
         while True:
             task_info = redis.client.blpop("build_tasks", timeout=3600)
             if task_info:
-                BuildLog.clone_build_project(*task_info[1].decode().split("|"))
+                print(f"正在执行: {task_info}")
+                try:
+                    BuildLog.clone_build_project(*task_info[1].decode().split("|"))
+                except Exception as e:
+                    print(f"自动构建异常, {str(e)}")
+                print(f"执行结束: {task_info}")
 
 
 class StartAutoBuild(Command):
