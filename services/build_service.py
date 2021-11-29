@@ -387,7 +387,7 @@ class BuildLog():
         # user
         try:
             user_dict = User.query_user(log_obj.creator)
-            user_name = user_dict["nick_name"] or user_dict["name"]
+            user_name = user_dict["nickname"] or user_dict["name"]
         except:
             user_name = "未知"
 
