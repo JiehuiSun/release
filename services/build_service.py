@@ -349,9 +349,11 @@ class BuildLog():
             with app.app_context():
                 build_obj = BuildLogModel.query.get(build_log_id)
                 build_obj.status = 3
-                db.session.commit()
                 with open(log_file, "a") as e:
                     e.write(f">>: Build Error: {str(s)}\n")
+                with open(log_file, "r") as e:
+                    build_obj.log_text = e.read()
+                db.session.commit()
                 raise ParamsError(f"Build Err! Clone Err {str(s)}")
         return
 
