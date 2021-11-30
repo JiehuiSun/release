@@ -232,7 +232,7 @@ class BuildLog():
             pass
 
         http_url = project_dict["http_url"]
-        name = project_dict["name"]
+        name = project_dict["name"].strip(" ")
 
         name = name.replace(" ", "_")
         log_count = BuildLogModel.query.filter_by(project_id=project_id,

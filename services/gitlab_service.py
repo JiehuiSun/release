@@ -257,7 +257,7 @@ class GitLab():
         """
         git_cmd = current_app.config["GIT_ABS_CMD"]
         project = cls.gitlab().projects.get(project_id)
-        p_local_path = f"{pro_dir}/{project.name}"
+        p_local_path = f"{pro_dir}/{project.name.strip()}"
         if not os.path.exists(p_local_path):
             project_url = project.ssh_url_to_repo.replace("op-gitlab.mumway.com", "gitlab.xiavan.cloud")
             clone_cmd = f"{git_cmd} clone {project_url} {p_local_path}"
