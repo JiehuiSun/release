@@ -120,7 +120,7 @@ tasks.InitTasks()
 @app.route("/utils/upload_file/", endpoint="/utils/upload_file/", methods=['POST'])
 def upload_file():
     if request.method == 'POST':
-        appid = request.headers.get("App-Id")
+        appid = request.headers.get("Appid")
         if not appid or appid not in app.config["ALLOW_APPID"]:
             res = {
                 "errmsg": "非法请求",
