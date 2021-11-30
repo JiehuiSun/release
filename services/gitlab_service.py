@@ -215,7 +215,7 @@ class GitLab():
     def pack_java(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):
         git_cmd = current_app.config["GIT_ABS_CMD"]
         project = cls.gitlab().projects.get(project_id)
-        p_local_path = f"{pro_dir}/{project.name}"
+        p_local_path = f"{pro_dir}/{project.name}".replace(" ", "_")
         if not os.path.exists(p_local_path):
             project_url = project.ssh_url_to_repo.replace("op-gitlab.mumway.com", "gitlab.xiavan.cloud")
             clone_cmd = f"{git_cmd} clone {project_url} {p_local_path}"
