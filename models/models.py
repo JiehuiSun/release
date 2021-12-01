@@ -412,6 +412,7 @@ class RequirementModel(db.Model):
     web_user_ids = db.Column(db.String(256), nullable=True, comment="前端用户")
     api_user_ids = db.Column(db.String(256), nullable=True, comment="后端用户")
     test_user_ids = db.Column(db.String(256), nullable=True, comment="测试用户")
+    leader_user_ids = db.Column(db.String(256), nullable=True, comment="技术负责人用户")
     # 前端leader让使用这个字段找组
     group_ids = db.Column(db.String(256), nullable=True, comment="所有人员的组ID")
     test_env = db.Column(db.String(12), nullable=True, default="test", comment="提测环境")
@@ -473,6 +474,10 @@ class RequirementModel(db.Model):
                 continue
             ret_dict[k.name] = value
         ret_dict["all_user_id_list"] = all_u_id_list
+
+        for k, v in ret_dict.items():
+            if k.startswith("dt_plan"):
+                v = v.split(" ")[0]
 
         return ret_dict
 

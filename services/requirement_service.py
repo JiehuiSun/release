@@ -27,7 +27,8 @@ class Requirement():
                         dt_plan_tested=None, dt_plan_released=None,
                         dt_plan_finished=None, project_user_id_list=None,
                         product_user_id_list=None, web_user_id_list=None,
-                        api_user_id_list=None, test_user_id_list=None, test_env="test"):
+                        api_user_id_list=None, test_user_id_list=None,
+                        test_env="test", leader_user_id_list=None):
         """
         新增需求(基本信息)
         """
@@ -70,6 +71,9 @@ class Requirement():
         if test_user_id_list:
             requirement_dict["test_user_ids"] = ",".join(str(i) for i in test_user_id_list)
             user_id_list += test_user_id_list
+        if leader_user_id_list:
+            requirement_dict["leader_user_ids"] = ",".join(str(i) for i in leader_user_id_list)
+            user_id_list += leader_user_id_list
 
         group_data = Group.list_group(user_id_list=user_id_list)
         group_id_list = [i["id"] for i in group_data["data_list"]]
@@ -216,7 +220,7 @@ class Requirement():
                            dt_plan_finished=None, project_user_id_list=None,
                            product_user_id_list=None, web_user_id_list=None,
                            api_user_id_list=None, test_user_id_list=None,
-                           test_env="test"):
+                           test_env="test", leader_user_id_list=None):
         """
         更新需求(基本信息)
         """
@@ -254,6 +258,8 @@ class Requirement():
             requirement_obj.web_user_ids = ",".join(str(i) for i in web_user_id_list)
         if test_user_id_list is not None:
             requirement_obj.test_user_ids = ",".join(str(i) for i in test_user_id_list)
+        if leader_user_id_list is not None:
+            requirement_obj.leader_user_ids = ",".join(str(i) for i in leader_user_id_list)
 
         user_id_list = list()
         user_id_list += project_user_id_list
@@ -261,6 +267,7 @@ class Requirement():
         user_id_list += api_user_id_list
         user_id_list += web_user_id_list
         user_id_list += test_user_id_list
+        user_id_list += leader_user_id_list
 
         group_data = Group.list_group(user_id_list=user_id_list)
         group_id_list = [i["id"] for i in group_data["data_list"]]
