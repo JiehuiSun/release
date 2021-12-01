@@ -5,6 +5,7 @@
 # Filename: auto_build.py
 
 
+import datetime
 from flask_script import Command, Manager
 from threading import Thread
 from base import redis
@@ -22,12 +23,13 @@ class Consumer(Thread):
         while True:
             task_info = redis.client.blpop("build_tasks", timeout=3600)
             if task_info:
-                print(f"正在执行: {task_info}")
+                now = datetime.datetime.now()
+                print(f"正在执行({str(now)}): {task_info}")
                 try:
                     BuildLog.clone_build_project(*task_info[1].decode().split("|"))
                 except Exception as e:
-                    print(f"自动构建异常, {str(e)}")
-                print(f"执行结束: {task_info}")
+                    print(f"自动构建异常, {task_info} --- {str(e)}")
+                print(f"执行结束({str(datetime.datetime.now())}): {task_info}")
 
 
 class StartAutoBuild(Command):
