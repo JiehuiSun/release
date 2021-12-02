@@ -120,12 +120,19 @@ class GitLab():
                 return False, "没有打包脚本\n"
             base_file = os.path.abspath(base_file)
 
+            # 获取自定义脚本
+            custom_comm_dict = project_dict["script"]
+            if custom_comm_dict.get(env):
+                custom_comm = custom_comm_dict[env]
+            else:
+                custom_comm = ""
+
             pack_func = getattr(cls, t_name)
             if not pack_func:
                 return False, "项目语言脚本配置异常, 请检查项目及脚本配置以及打包入口\n"
 
             # commit v2
-            tag, tgz = pack_func(project_id, branch, base_file, pro_dir, log_file, env, commit=None)
+            tag, tgz = pack_func(project_id, branch, base_file, pro_dir, log_file, env, commit=None, custom_comm=custom_comm)
             # project = cls.gitlab().projects.get(project_id)
             # tgz = project.repository_archive(branch)
             if not tag:
@@ -203,7 +210,7 @@ class GitLab():
         return branch.commit
 
     @classmethod
-    def pack_python(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):
+    def pack_python(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None, custom_comm=""):
         git_cmd = current_app.config["GIT_ABS_CMD"]
         project = cls.gitlab().projects.get(project_id)
         p_local_path = f"{pro_dir}/{project.name}"
@@ -219,7 +226,7 @@ class GitLab():
         return True, p_local_path
 
     @classmethod
-    def pack_java(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):
+    def pack_java(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None, custom_comm=""):
         git_cmd = current_app.config["GIT_ABS_CMD"]
         project = cls.gitlab().projects.get(project_id)
         p_local_path = f"{pro_dir}/{project.name}".replace(" ", "_")
@@ -238,7 +245,7 @@ class GitLab():
         return True, ret_dir
 
     @classmethod
-    def pack_php(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):
+    def pack_php(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None, custom_comm=""):
         git_cmd = current_app.config["GIT_ABS_CMD"]
         project = cls.gitlab().projects.get(project_id)
         p_local_path = f"{pro_dir}/{project.name}"
@@ -254,11 +261,11 @@ class GitLab():
         return True, p_local_path
 
     @classmethod
-    def pack_go(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):
+    def pack_go(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None, custom_comm=""):
         return True, True
 
     @classmethod
-    def pack_web(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None):
+    def pack_web(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None, custom_comm=""):
         """
         TODO 默认配置使用bash, 项目配置使用text的shell, 后期做兼容.
         """
@@ -271,9 +278,23 @@ class GitLab():
             if os.system(f"{clone_cmd} >> {log_file}"):
                 return False, "打包异常, 项目克隆失败\n"
 
-        a = os.system(f"cd {p_local_path} >> {log_file} 2>&1 &&{git_cmd} checkout .&&{git_cmd} pull &&{git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1 &&/bin/bash {base_file} {env} >> {log_file} 2>&1")
+        a = os.system(f"cd {p_local_path} >> {log_file} 2>&1 &&{git_cmd} checkout .&&{git_cmd} pull &&{git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1")
         if a:
-            return False, f"打包异常, Git错误或脚本执行错误, 错误代码{a}\n"
+            return False, f"打包异常, Git错误或仓库错乱, 错误代码{a}\n"
+        if not custom_comm:
+            a = os.system(f"/bin/bash {base_file} {env} >> {log_file} 2>&1")
+            if a:
+                return False, f"打包异常, 默认脚本执行错误, 错误代码{a}\n"
+        else:
+            c = []
+            for i in custom_comm.splitlines():
+                if not i:
+                    c.append(i)
+            cc = ">> {log_file}&&".join(c)
+            a = os.system(cc)
+            if a:
+                return False, f"打包异常, 自定义脚本执行错误, 错误代码{a}\n"
+
         ret_dir = f"{p_local_path}/dist"
         if not os.path.exists(ret_dir):
             ret_dir = f"{p_local_path}/dist_tmp"

@@ -250,7 +250,21 @@ class BuildLog():
             last_commit = ""
 
         commit_text = ""
-        new_commit_list = GitLab.list_commit(source_project_id, branch)
+        try:
+            new_commit_list = GitLab.list_commit(source_project_id, branch)
+        except:
+            new_commit_list = list()
+            # 发送错误通知
+            title = "构建异常"
+            msg = list()
+            msg.append("#### 构建异常")
+            msg.append(f"**错误信息:** {name}获取commit信息异常")
+            group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
+            msg = {
+                "title": title,
+                "text": "\n".join(msg)
+            }
+            send_ding_errmsg(group_webhook_url_list, msg, msg_type="markdown")
         for i in new_commit_list:
             if i.id == last_commit:
                 break
@@ -317,8 +331,8 @@ class BuildLog():
             title = "构建异常"
             msg = list()
             msg.append("#### 构建异常")
-            msg.append(f"**日志文件:** {log_file}")
-            msg.append(f"**错误信息:** {str(s)}")
+            msg.append(f"**日志文件:** {log_file} ")
+            msg.append(f"**错误信息:** {str(s)} ")
             group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
             msg = {
                 "title": title,
@@ -354,8 +368,8 @@ class BuildLog():
                         title = "构建异常"
                         msg = list()
                         msg.append("#### 构建异常")
-                        msg.append(f"**日志文件:** {log_file}")
-                        msg.append(f"**错误信息:** {str(s)}")
+                        msg.append(f"**日志文件:** {log_file} ")
+                        msg.append(f"**错误信息:** {str(tar_file_dict)} ")
                         group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
                         msg = {
                             "title": title,
@@ -390,8 +404,8 @@ class BuildLog():
                 title = "构建异常"
                 msg = list()
                 msg.append("#### 构建异常")
-                msg.append(f"**日志文件:** {log_file}")
-                msg.append(f"**错误信息:** {str(s)}")
+                msg.append(f"**日志文件:** {log_file} ")
+                msg.append(f"**错误信息:** {str(s)} ")
                 group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
                 msg = {
                     "title": title,
