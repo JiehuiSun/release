@@ -158,7 +158,7 @@ class Project():
             return project_dict
 
         build_script_obj_list = BuildScriptModel.query \
-            .filter_by(project_id=project_id,
+            .filter_by(project_id=project_obj.id,
                        is_deleted=False).all()
         if not build_script_obj_list:
             project_dict["script"] = dict()

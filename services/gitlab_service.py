@@ -143,7 +143,7 @@ class GitLab():
             # TODO 日志
             with open(log_file, "a") as e:
                 e.write(">>: Error: pull project error..\n\n")
-            return False, "Clone Err! {str(s)}\n"
+            return False, f"Clone Err! {str(s)}\n"
 
         with open(log_file, "a") as e:
             e.write("generate 'tar.gz' file..\n")

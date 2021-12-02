@@ -164,9 +164,9 @@ class Submit():
                     title = "交付异常"
                     msg = list()
                     msg.append("#### 交付异常")
-                    msg.append(f"**项目ID:** {project_id}")
-                    msg.append(f"**环境:** {env}")
-                    msg.append(f"**错误信息:** {ret}")
+                    msg.append(f"**项目ID:** {project_id} ")
+                    msg.append(f"**环境:** {env} ")
+                    msg.append(f"**错误信息:** {ret} ")
                     group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
                     msg = {
                         "title": title,
@@ -184,9 +184,9 @@ class Submit():
             title = "交付异常"
             msg = list()
             msg.append("#### 交付异常")
-            msg.append(f"**项目ID:** {project_id}")
-            msg.append(f"**环境:** {env}")
-            msg.append(f"**错误信息:** {str(e)}")
+            msg.append(f"**项目ID:** {project_id} ")
+            msg.append(f"**环境:** {env} ")
+            msg.append(f"**错误信息:** {str(e)} ")
             group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
             msg = {
                 "title": title,
