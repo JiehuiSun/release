@@ -215,12 +215,9 @@ class Project():
                     if script_obj:
                         # 已存在的环境配置
                         script_obj.execute_comm = v
-                        if script_type:
-                            script_obj.script_type = script_type
-                        if script_path:
-                            script_obj.script_path = script_path
-                        if archive_path:
-                            script_obj.archive_path = archive_path
+                        script_obj.script_type = script_type
+                        script_obj.script_path = script_path
+                        script_obj.archive_path = archive_path
                     else:
                         # 不存在的环境配置
                         tmp_dict = {
