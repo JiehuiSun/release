@@ -218,11 +218,11 @@ class ProjectHost():
         if not hp_obj:
             raise ParamsError("该配置不存在或已删除")
 
-        hp_obj = HostProject.query.filter_by(project_id=hp_obj.project_id,
+        hp_obj_list = HostProject.query.filter_by(project_id=hp_obj.project_id,
                                              env=hp_obj.env,
                                              is_deleted=False).all()
 
-        old_id_list = [i.host_id for i in hp_obj]
+        old_id_list = [i.host_id for i in hp_obj_list]
 
         id_data = query_operate_ids(old_id_list, host_id_list)
         # del
@@ -252,7 +252,9 @@ class ProjectHost():
         # change
         need_update_id_list = list(set(old_id_list) & set(host_id_list))
         hp_update_obj_list = HostProject.query \
-            .filter(HostProject.id.in_(need_update_id_list)).all()
+            .filter(HostProject.host_id.in_(need_update_id_list)) \
+            .filter_by(project_id=hp_obj.project_id,
+                       env=hp_obj.env).all()
         for i in hp_update_obj_list:
             if name:
                 i.name = name

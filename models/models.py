@@ -476,7 +476,7 @@ class RequirementModel(db.Model):
         ret_dict["all_user_id_list"] = all_u_id_list
 
         for k, v in ret_dict.items():
-            if k.startswith("dt_plan"):
+            if k.startswith("dt_plan") and v:
                 v = v.split(" ")[0]
 
         return ret_dict
