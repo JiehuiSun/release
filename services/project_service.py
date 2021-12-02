@@ -179,7 +179,7 @@ class Project():
     @classmethod
     def update_project(cls, id, name=None, http_url=None, desc=None,
                        ssh_url=None, group_id=None, type_id=None, script=None,
-                       script_type=None, archive_path=None, script_path=None,
+                       script_type=1, archive_path=None, script_path=None,
                        source_project_id=None, is_build=True):
         """
         更新项目
