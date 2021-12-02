@@ -73,6 +73,9 @@ class DefaultConfig(object):
         "onasgkdjsaldgh"
     ]
 
+    # opsdev webhook
+    OPSDEV_WEBHOOK = ""
+
 # local_configs目的: 因为线上、测试、开发环境的配置不同，
 # 所以每个环境可以有自己的local_configs来覆盖configs里的DefaultConfig
 # 但是这里有一个问题

@@ -8,6 +8,7 @@
 import datetime
 
 from base import db
+from flask import current_app
 from base.errors import ParamsError
 from models.models import BuildLogModel, SubmitLogModel
 from .project_service import Project
@@ -17,6 +18,7 @@ from .deploy_service import Deploy
 from . import handle_page
 from utils.time_utils import str2tsp
 from utils import async_func
+from utils import send_ding_errmsg
 
 
 class Submit():
@@ -157,6 +159,20 @@ class Submit():
                 ret = Deploy.add_deploy(project_id, file_path, env)
                 if ret:
                     cls.update_status(submit_id, 3)
+
+                    # 发送错误通知
+                    title = "交付异常"
+                    msg = list()
+                    msg.append("#### 交付异常")
+                    msg.append(f"**项目ID:** {project_id}")
+                    msg.append(f"**环境:** {env}")
+                    msg.append(f"**错误信息:** {ret}")
+                    group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
+                    msg = {
+                        "title": title,
+                        "text": "\n".join(msg)
+                    }
+                    send_ding_errmsg(group_webhook_url_list, msg, msg_type="markdown")
                     print(f"Deploy Error, {ret}")
                     return
 
@@ -164,6 +180,19 @@ class Submit():
         except Exception as e:
             print(f">> Deploy Error, {str(e)}")
             cls.update_status(submit_id, 3)
+            # 发送错误通知
+            title = "交付异常"
+            msg = list()
+            msg.append("#### 交付异常")
+            msg.append(f"**项目ID:** {project_id}")
+            msg.append(f"**环境:** {env}")
+            msg.append(f"**错误信息:** {str(e)}")
+            group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
+            msg = {
+                "title": title,
+                "text": "\n".join(msg)
+            }
+            send_ding_errmsg(group_webhook_url_list, msg, msg_type="markdown")
         return
 
     @classmethod

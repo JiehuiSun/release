@@ -17,6 +17,7 @@ from .gitlab_service import GitLab
 from . import handle_page, gen_version_num
 from utils.time_utils import str2tsp, datetime_2_str_by_format, dt2ts
 from utils import async_func
+from utils import send_ding_errmsg
 
 
 
@@ -311,6 +312,19 @@ class BuildLog():
             db.session.commit()
             with open(log_file, "a") as e:
                 e.write(f">>: Build Error: {str(s)}\n")
+
+            # 发送错误通知
+            title = "构建异常"
+            msg = list()
+            msg.append("#### 构建异常")
+            msg.append(f"**日志文件:** {log_file}")
+            msg.append(f"**错误信息:** {str(s)}")
+            group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
+            msg = {
+                "title": title,
+                "text": "\n".join(msg)
+            }
+            send_ding_errmsg(group_webhook_url_list, msg, msg_type="markdown")
             raise ParamsError(f"Build Err! Clone Err {str(s)}")
 
         return build_obj.id
@@ -335,6 +349,19 @@ class BuildLog():
                         build_obj.status = 3
                         e.write(tar_file_dict)
                         e.write(f">>: log file name is {log_file}\n\n")
+
+                        # 发送错误通知
+                        title = "构建异常"
+                        msg = list()
+                        msg.append("#### 构建异常")
+                        msg.append(f"**日志文件:** {log_file}")
+                        msg.append(f"**错误信息:** {str(s)}")
+                        group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
+                        msg = {
+                            "title": title,
+                            "text": "\n".join(msg)
+                        }
+                        send_ding_errmsg(group_webhook_url_list, msg, msg_type="markdown")
                     else:
                         e.write(f">>: Clone Project End..\n")
                         e.write(f">>: Build Success! \n tar file name is {tar_file_name}\n\n")
@@ -358,6 +385,19 @@ class BuildLog():
                 with open(log_file, "r") as e:
                     build_obj.log_text = e.read()
                 db.session.commit()
+
+                # 发送错误通知
+                title = "构建异常"
+                msg = list()
+                msg.append("#### 构建异常")
+                msg.append(f"**日志文件:** {log_file}")
+                msg.append(f"**错误信息:** {str(s)}")
+                group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
+                msg = {
+                    "title": title,
+                    "text": "\n".join(msg)
+                }
+                send_ding_errmsg(group_webhook_url_list, msg, msg_type="markdown")
                 raise ParamsError(f"Build Err! Clone Err {str(s)}")
         return
 

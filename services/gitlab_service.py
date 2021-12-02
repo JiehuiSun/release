@@ -213,7 +213,7 @@ class GitLab():
             if os.system(f"{clone_cmd} >> {log_file}"):
                 return False, "打包异常, 项目克隆失败\n"
 
-        if os.system(f"cd {p_local_path} >> {log_file} 2>&1 && {git_cmd} checkout .&&{git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1"):
+        if os.system(f"cd {p_local_path} >> {log_file} 2>&1 && {git_cmd} checkout .&&{git_cmd} pull &&{git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1"):
             return False, "打包异常, Git错误或脚本执行错误\n"
 
         return True, p_local_path
@@ -231,7 +231,7 @@ class GitLab():
 
         if not os.path.exists(f"{p_local_path}/ops_dev_path"):
             os.system(f"mkdir {p_local_path}/ops_dev_path")
-        if os.system(f"cd {p_local_path} >> {log_file} 2>&1 &&{git_cmd} checkout .&& {git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1 &&/bin/bash {base_file} {env} >> {log_file} 2>&1"):
+        if os.system(f"cd {p_local_path} >> {log_file} 2>&1 &&{git_cmd} checkout .&&{git_cmd} pull && {git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1 &&/bin/bash {base_file} {env} >> {log_file} 2>&1"):
             return False, "打包异常, Git错误或脚本执行错误\n"
         ret_dir = f"{p_local_path}/ops_dev_path"
 
@@ -248,7 +248,7 @@ class GitLab():
             if os.system(f"{clone_cmd} >> {log_file}"):
                 return False, "打包异常, 项目克隆失败\n"
 
-        if os.system(f"cd {p_local_path} >> {log_file} 2>&1 &&{git_cmd} checkout .&& {git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1"):
+        if os.system(f"cd {p_local_path} >> {log_file} 2>&1 &&{git_cmd} checkout .&&{git_cmd} pull && {git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1"):
             return False, "打包异常, Git错误或脚本执行错误\n"
 
         return True, p_local_path
@@ -271,7 +271,7 @@ class GitLab():
             if os.system(f"{clone_cmd} >> {log_file}"):
                 return False, "打包异常, 项目克隆失败\n"
 
-        a = os.system(f"cd {p_local_path} >> {log_file} 2>&1 &&{git_cmd} checkout .&&{git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1 &&/bin/bash {base_file} {env} >> {log_file} 2>&1")
+        a = os.system(f"cd {p_local_path} >> {log_file} 2>&1 &&{git_cmd} checkout .&&{git_cmd} pull &&{git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1 &&/bin/bash {base_file} {env} >> {log_file} 2>&1")
         if a:
             return False, f"打包异常, Git错误或脚本执行错误, 错误代码{a}\n"
         ret_dir = f"{p_local_path}/dist"
