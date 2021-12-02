@@ -282,15 +282,16 @@ class GitLab():
         if a:
             return False, f"打包异常, Git错误或仓库错乱, 错误代码{a}\n"
         if not custom_comm:
-            a = os.system(f"/bin/bash {base_file} {env} >> {log_file} 2>&1")
+            a = os.system(f"cd {p_local_path} && /bin/bash {base_file} {env} >> {log_file} 2>&1")
             if a:
                 return False, f"打包异常, 默认脚本执行错误, 错误代码{a}\n"
         else:
-            c = []
+            c = [f"cd {p_local_path}"]
             for i in custom_comm.splitlines():
-                if not i:
-                    c.append(i)
-            cc = ">> {log_file}&&".join(c)
+                if i.strip():
+                    c.append(i.strip())
+            cc = f">> {log_file} 2>&1 &&".join(c)
+            cc += f">> {log_file} 2>&1"
             a = os.system(cc)
             if a:
                 return False, f"打包异常, 自定义脚本执行错误, 错误代码{a}\n"
