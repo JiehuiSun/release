@@ -132,6 +132,13 @@ class Requirement():
         requirement_list = list()
         for i in requirement_obj_list:
             r_dict = i.to_dict()
+            # current env
+            if int(status_id) == 30:
+                if r_dict["status_code"] == 604:
+                    r_dict["current_env"] = "pre"
+                else:
+                    r_dict["current_env"] = r_dict["test_env"]
+
             requirement_list.append(r_dict)
 
         ret = {
