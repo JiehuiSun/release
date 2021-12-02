@@ -107,7 +107,14 @@ class GitLab():
             e.write("git pull project..\n")
 
         try:
-            t_name = f"pack_{job_type.lower()}"
+            # 区分是否需要不构建
+            project_dict = Project.query_project(project_id,
+                                                 need_detail=False,
+                                                 is_local_project=False)
+            if project_dict.get("is_build"):
+                t_name = f"pack_{job_type.lower()}"
+            else:
+                t_name = f"pack_python" # 不用构建的
             base_file = f"./base/pack_scripts/{t_name}.sh"
             if not os.path.isfile(base_file):
                 return False, "没有打包脚本\n"

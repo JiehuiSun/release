@@ -245,6 +245,7 @@ class ProjectModel(db.Model):
     source_id = db.Column(db.Integer, nullable=True, default=1, comment="来源: 1 gitlab")
     source_project_id = db.Column(db.Integer, nullable=True, comment="来源的项目ID")
     job_id = db.Column(db.Integer, nullable=True, comment="开发语言ID(关联JOB_TYPE)")
+    is_build = db.Column(db.Boolean, default=True, comment="是否需要构建")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)

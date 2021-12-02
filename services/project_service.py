@@ -21,7 +21,7 @@ class Project():
     def add_project(cls, name, http_url, desc=None, ssh_url=None,
                     group_id=None, type_id=None, script=None,
                     script_type=None, archive_path=None, script_path=None,
-                    source_project_id=None):
+                    source_project_id=None, is_build=True):
         """
         新增项目(正常不对外)
         """
@@ -40,6 +40,7 @@ class Project():
             project_dict["type_id"] = type_id
         if source_project_id:
             project_dict["source_project_id"] = source_project_id
+        project_dict["is_build"] = is_build
 
         project = ProjectModel(**project_dict)
 
@@ -178,7 +179,8 @@ class Project():
     @classmethod
     def update_project(cls, id, name=None, http_url=None, desc=None,
                        ssh_url=None, group_id=None, type_id=None, script=None,
-                       script_type=None, archive_path=None, script_path=None):
+                       script_type=None, archive_path=None, script_path=None,
+                       source_project_id=None, is_build=True):
         """
         更新项目
         """
@@ -199,6 +201,9 @@ class Project():
             project_obj.group_id = group_id
         if type_id:
             project_obj.type_id = type_id
+        if source_project_id:
+            project_obj.source_project_id = source_project_id
+        project_obj.is_build = is_build
 
         if script:
             try:
