@@ -109,7 +109,6 @@ class GitLab():
         try:
             # 区分是否需要不构建
             project_dict = Project.query_project(project_id,
-                                                 need_detail=False,
                                                  is_local_project=False)
             if project_dict.get("is_build"):
                 t_name = f"pack_{job_type.lower()}"
