@@ -149,7 +149,7 @@ class Submit():
 
     @classmethod
     @async_func
-    def async_add_deploy(cls, submit_id, project_id, file_path, env):
+    def async_add_deploy(cls, submit_id, project_id, file_path, env, title, version_num):
         """
         TODO log
         """
@@ -161,11 +161,12 @@ class Submit():
                     cls.update_status(submit_id, 3)
 
                     # 发送错误通知
-                    title = "交付异常"
+                    title = "交付失败"
                     msg = list()
-                    msg.append("#### 交付异常")
-                    msg.append(f"**项目ID:** {project_id} ")
-                    msg.append(f"**环境:** {env} ")
+                    msg.append("#### 交付失败")
+                    msg.append(f"**包名:** {title}  ")
+                    msg.append(f"**环境:** {env}  ")
+                    msg.append(f"**版本号:** {version_num}  ")
                     msg.append(f"**错误信息:** {ret} ")
                     group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
                     msg = {
@@ -184,8 +185,9 @@ class Submit():
             title = "交付异常"
             msg = list()
             msg.append("#### 交付异常")
-            msg.append(f"**项目ID:** {project_id} ")
-            msg.append(f"**环境:** {env} ")
+            msg.append(f"**包名:** {title}  ")
+            msg.append(f"**环境:** {env}  ")
+            msg.append(f"**版本号:** {version_num}  ")
             msg.append(f"**错误信息:** {str(e)} ")
             group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
             msg = {

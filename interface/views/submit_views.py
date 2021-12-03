@@ -62,7 +62,9 @@ class SubmitProjectView(Api):
         Submit.async_add_deploy(submit_dict["id"],
                                 submit_dict["project_id"],
                                 file_path,
-                                submit_dict["env"])
+                                submit_dict["env"],
+                                submit_dict["title"],
+                                submit_dict["version_num"])
 
         return self.ret()
 

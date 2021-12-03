@@ -265,9 +265,9 @@ class BuildLog():
             title = "构建警告"
             msg = list()
             msg.append("#### 构建警告")
-            msg.append(f"**仓库:** {name}\n")
-            msg.append(f"**分支:** {branch}\n")
-            msg.append(f"**环境:** {env}\n")
+            msg.append(f"**仓库:** {name}  ")
+            msg.append(f"**分支:** {branch}  ")
+            msg.append(f"**环境:** {env}  ")
             msg.append(f"**错误信息:** {name}获取commit信息异常\n请检查gitlab项目是否有迁移\n该异常不会影响打包")
             group_webhook.append(current_app.config["OPSDEV_WEBHOOK"])
             msg = {
@@ -352,9 +352,9 @@ class BuildLog():
             title = "构建异常"
             msg = list()
             msg.append("#### 构建警告")
-            msg.append(f"**仓库:** {name}\n")
-            msg.append(f"**分支:** {branch}\n")
-            msg.append(f"**环境:** {env}\n")
+            msg.append(f"**仓库:** {name}   ")
+            msg.append(f"**分支:** {branch}   ")
+            msg.append(f"**环境:** {env}  ")
             msg.append(f"**错误详情:** {str(s)} ")
             group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
             msg = {
@@ -401,10 +401,10 @@ class BuildLog():
                         title = "制品失败"
                         msg = list()
                         msg.append("#### 制品失败")
-                        msg.append(f"**仓库:** {name}\n")
-                        msg.append(f"**分支:** {branch}\n")
-                        msg.append(f"**环境:** {env}\n")
-                        msg.append(f"**错误详情:** {str(tar_file_dict)}\n")
+                        msg.append(f"**仓库:** {name}   ")
+                        msg.append(f"**分支:** {branch}   ")
+                        msg.append(f"**环境:** {env}   ")
+                        msg.append(f"**错误详情:** {str(tar_file_dict)}")
                         group_webhook.append(current_app.config["OPSDEV_WEBHOOK"])
                         msg = {
                             "title": title,
@@ -439,10 +439,10 @@ class BuildLog():
                 title = "制品失败"
                 msg = list()
                 msg.append("#### 制品失败")
-                msg.append(f"**仓库:** {name}\n")
-                msg.append(f"**分支:** {branch}\n")
-                msg.append(f"**环境:** {env}\n")
-                msg.append(f"**错误详情:** {str(s)}\n")
+                msg.append(f"**仓库:** {name}  ")
+                msg.append(f"**分支:** {branch}  ")
+                msg.append(f"**环境:** {env}  ")
+                msg.append(f"**错误详情:** {str(s)}  ")
                 group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
                 msg = {
                     "title": title,
