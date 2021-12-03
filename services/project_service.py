@@ -131,7 +131,11 @@ class Project():
             for i in project_list:
                 if not i["source_project_id"]:
                     continue
-                p = GitLab.get_project(i["source_project_id"])
+                try:
+                    p = GitLab.get_project(i["source_project_id"])
+                except Exception as e:
+                    print(f"项目({i['name']}){i['id']}异常, 关联gitlab的project_id是{i['source_project_id']}, Err: {str(e)}")
+                    p = None
                 if p:
                     dt_last_submit = p.last_activity_at
                     dt_last_submit = dt_last_submit.split(".")[0].replace("T", " ")

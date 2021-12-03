@@ -72,7 +72,7 @@ class GitLab():
             project_dict["group_id"] = 0
             project_dict_list[i.id] = project_dict
 
-        project_data = Project.list_project()
+        project_data = Project.list_project(is_base=True)
         exist_project_id_list = list()
         for i in project_data["data_list"]:
             exist_project_id_list.append(i["source_project_id"])
