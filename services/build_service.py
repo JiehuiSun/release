@@ -258,7 +258,7 @@ class BuildLog():
             title = "构建异常"
             msg = list()
             msg.append("#### 构建异常")
-            msg.append(f"**错误信息:** {name}获取commit信息异常")
+            msg.append(f"**错误信息:** {name}获取commit信息异常\n请检查gitlab项目是否有迁移")
             group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
             msg = {
                 "title": title,

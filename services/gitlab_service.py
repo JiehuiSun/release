@@ -304,3 +304,34 @@ class GitLab():
             os.system(f"cp -R `find {p_local_path} -type d -path {p_local_path}/node_modules -prune -o -print | sed 1d ` {ret_dir}")
 
         return True, ret_dir
+
+    @classmethod
+    def pack_miniapp(cls, project_id, branch, base_file, pro_dir, log_file, env, commit=None, custom_comm=""):
+        git_cmd = current_app.config["GIT_ABS_CMD"]
+        project = cls.gitlab().projects.get(project_id)
+        p_local_path = f"{pro_dir}/{project.name.strip()}"
+        if not os.path.exists(p_local_path):
+            project_url = project.ssh_url_to_repo.replace("op-gitlab.mumway.com", "gitlab.xiavan.cloud")
+            clone_cmd = f"{git_cmd} clone {project_url} {p_local_path}"
+            if os.system(f"{clone_cmd} >> {log_file}"):
+                return False, "打包异常, 项目克隆失败\n"
+
+        a = os.system(f"cd {p_local_path} >> {log_file} 2>&1 &&{git_cmd} checkout .&&{git_cmd} pull &&{git_cmd} checkout {branch} >> {log_file} 2>&1 && {git_cmd} pull origin {branch} >> {log_file} 2>&1")
+        if a:
+            return False, f"打包异常, Git错误或仓库错乱, 错误代码{a}\n"
+        if not custom_comm:
+            a = os.system(f"cd {p_local_path} && /bin/bash {base_file} {env} >> {log_file} 2>&1")
+            if a:
+                return False, f"打包异常, 默认脚本执行错误, 错误代码{a}\n"
+        else:
+            c = [f"cd {p_local_path}"]
+            for i in custom_comm.splitlines():
+                if i.strip():
+                    c.append(i.strip())
+            cc = f">> {log_file} 2>&1 &&".join(c)
+            cc += f">> {log_file} 2>&1"
+            a = os.system(cc)
+            if a:
+                return False, f"打包异常, 自定义脚本执行错误, 错误代码{a}\n"
+
+        return True, ""
