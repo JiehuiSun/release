@@ -12,7 +12,7 @@ from base import db, redis
 from base.errors import ParamsError
 from models.models import BuildLogModel, LOG_STATUS
 from .project_service import Project
-from .user_service import User
+from .user_service import User, Group
 from .gitlab_service import GitLab
 from . import handle_page, gen_version_num
 from utils.time_utils import str2tsp, datetime_2_str_by_format, dt2ts
@@ -249,22 +249,32 @@ class BuildLog():
         except Exception as e:
             last_commit = ""
 
+        # 查询项目所属组的webhook
+        group_data = Group.list_group(group_id_list=[project_dict["group_id"]])
+        if group_data["data_list"]:
+            group_webhook = [group_data["data_list"][0]["webhook_url"]]
+        else:
+            group_webhook = []
+
         commit_text = ""
         try:
             new_commit_list = GitLab.list_commit(source_project_id, branch)
         except:
             new_commit_list = list()
             # 发送错误通知
-            title = "构建异常"
+            title = "构建警告"
             msg = list()
-            msg.append("#### 构建异常")
-            msg.append(f"**错误信息:** {name}获取commit信息异常\n请检查gitlab项目是否有迁移")
-            group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
+            msg.append("#### 构建警告")
+            msg.append(f"**仓库:** {name}\n")
+            msg.append(f"**分支:** {branch}\n")
+            msg.append(f"**环境:** {env}\n")
+            msg.append(f"**错误信息:** {name}获取commit信息异常\n请检查gitlab项目是否有迁移\n该异常不会影响打包")
+            group_webhook.append(current_app.config["OPSDEV_WEBHOOK"])
             msg = {
                 "title": title,
                 "text": "\n".join(msg)
             }
-            send_ding_errmsg(group_webhook_url_list, msg, msg_type="markdown")
+            send_ding_errmsg(group_webhook, msg, msg_type="markdown")
         for i in new_commit_list:
             if i.id == last_commit:
                 break
@@ -318,6 +328,17 @@ class BuildLog():
             if build_tasks_num >= 20:
                 # 队列达到20, 日志/提示
                 print(f"目前构建任务队列数: {build_tasks_num}")
+                # 发送错误通知
+                title = "队列警告"
+                msg = list()
+                msg.append("#### 队列警告")
+                msg.append(f"**构建队列告警:** 当前构建队列已达到20个, 请检查队列是否正常或根据情况设置线程/队列数 ")
+                group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
+                msg = {
+                    "title": title,
+                    "text": "\n".join(msg)
+                }
+                send_ding_errmsg(group_webhook_url_list, msg, msg_type="markdown")
             task_name = f"{build_id}|{name}|{tar_file_name}|{source_project_id}|{branch}|{log_file}|{job_type}|{env}"
             redis.client.rpush("build_tasks", task_name)
         except Exception as s:
@@ -330,15 +351,19 @@ class BuildLog():
             # 发送错误通知
             title = "构建异常"
             msg = list()
-            msg.append("#### 构建异常")
-            msg.append(f"**日志文件:** {log_file} ")
-            msg.append(f"**错误信息:** {str(s)} ")
+            msg.append("#### 构建警告")
+            msg.append(f"**仓库:** {name}\n")
+            msg.append(f"**分支:** {branch}\n")
+            msg.append(f"**环境:** {env}\n")
+            msg.append(f"**错误详情:** {str(s)} ")
             group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
             msg = {
                 "title": title,
                 "text": "\n".join(msg)
             }
-            send_ding_errmsg(group_webhook_url_list, msg, msg_type="markdown")
+            if len(group_webhook) == 1:
+                group_webhook.append(current_app.config["OPSDEV_WEBHOOK"])
+            send_ding_errmsg(group_webhook, msg, msg_type="markdown")
             raise ParamsError(f"Build Err! Clone Err {str(s)}")
 
         return build_obj.id
@@ -355,6 +380,14 @@ class BuildLog():
                 with open(log_file, "a") as e:
                     e.write(f">>: Query Build Info ..\n")
                 build_obj = BuildLogModel.query.get(build_log_id)
+
+                # 查询项目所属组的webhook
+                group_data = Group.list_group(group_id_list=[build_obj.group_id])
+                if group_data["data_list"]:
+                    group_webhook = [group_data["data_list"][0]["webhook_url"]]
+                else:
+                    group_webhook = []
+
                 with open(log_file, "a") as e:
                     e.write(f">>: Clone Project Start..\n")
                 with open(log_file, "a") as e:
@@ -365,17 +398,19 @@ class BuildLog():
                         e.write(f">>: log file name is {log_file}\n\n")
 
                         # 发送错误通知
-                        title = "构建异常"
+                        title = "制品失败"
                         msg = list()
-                        msg.append("#### 构建异常")
-                        msg.append(f"**日志文件:** {log_file} ")
-                        msg.append(f"**错误信息:** {str(tar_file_dict)} ")
-                        group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
+                        msg.append("#### 制品失败")
+                        msg.append(f"**仓库:** {name}\n")
+                        msg.append(f"**分支:** {branch}\n")
+                        msg.append(f"**环境:** {env}\n")
+                        msg.append(f"**错误详情:** {str(tar_file_dict)}\n")
+                        group_webhook.append(current_app.config["OPSDEV_WEBHOOK"])
                         msg = {
                             "title": title,
                             "text": "\n".join(msg)
                         }
-                        send_ding_errmsg(group_webhook_url_list, msg, msg_type="markdown")
+                        send_ding_errmsg(group_webhook, msg, msg_type="markdown")
                     else:
                         e.write(f">>: Clone Project End..\n")
                         e.write(f">>: Build Success! \n tar file name is {tar_file_name}\n\n")
@@ -401,11 +436,13 @@ class BuildLog():
                 db.session.commit()
 
                 # 发送错误通知
-                title = "构建异常"
+                title = "制品失败"
                 msg = list()
-                msg.append("#### 构建异常")
-                msg.append(f"**日志文件:** {log_file} ")
-                msg.append(f"**错误信息:** {str(s)} ")
+                msg.append("#### 制品失败")
+                msg.append(f"**仓库:** {name}\n")
+                msg.append(f"**分支:** {branch}\n")
+                msg.append(f"**环境:** {env}\n")
+                msg.append(f"**错误详情:** {str(s)}\n")
                 group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
                 msg = {
                     "title": title,
