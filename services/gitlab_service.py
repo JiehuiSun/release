@@ -146,10 +146,13 @@ class GitLab():
 
         with open(log_file, "a") as e:
             e.write("generate 'tar.gz' file..\n")
-        tar_file_path = f"{pro_dir}/{tar_file_name}.tar.gz"
         # if job_type.lower() in ("web", "java"):
-        with tarfile.open(tar_file_path, "w:gz") as tar:
-            tar.add(tgz, arcname=os.path.basename(tar_file_name))
+        if tgz:
+            tar_file_path = f"{pro_dir}/{tar_file_name}.tar.gz"
+            with tarfile.open(tar_file_path, "w:gz") as tar:
+                tar.add(tgz, arcname=os.path.basename(tar_file_name))
+        else:
+            tar_file_path = ">> 该项目是无需打包的服务"
         # else:
         # with open(tar_file_path, "wb") as t:
             # t.write(tgz)
