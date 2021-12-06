@@ -7,6 +7,7 @@
 
 import json
 import datetime
+from sqlalchemy.dialects.mysql import LONGTEXT
 
 from flask import current_app
 from base import db
@@ -310,7 +311,7 @@ class SubmitLogModel(db.Model):
     type_id = db.Column(db.Integer, nullable=True, comment="类型: 10 后端,20 前端, 90 其他")
     group_id = db.Column(db.Integer, nullable=True, comment="组ID")
     count = db.Column(db.Integer, nullable=True, default=1, comment="组ID")
-    log_text = db.Column(db.LONGTEXT, nullable=True, comment="日志内容(先不分表)")
+    log_text = db.Column(LONGTEXT, nullable=True, comment="日志内容(先不分表)")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_build = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
@@ -354,7 +355,7 @@ class BuildLogModel(db.Model):
     file_path = db.Column(db.String(256), nullable=True, comment="tar包路径")
     type_id = db.Column(db.Integer, nullable=True, comment="类型: 10 后端,20 前端, 90 其他")
     group_id = db.Column(db.Integer, nullable=True, comment="组ID")
-    log_text = db.Column(db.LONGTEXT, nullable=True, comment="日志内容(先不分表)")
+    log_text = db.Column(LONGTEXT, nullable=True, comment="日志内容(先不分表)")
     commit_text = db.Column(db.Text, nullable=True, comment="Commit信息(先不分表)")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
