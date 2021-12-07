@@ -39,7 +39,7 @@ class GitLab():
         except Exception as e:
             raise InvalidArgsError(f"List Branch Err! Project Not Exist or GitLab Config Err. {str(e)}")
 
-        branch_list = branch = project.branches.list()
+        branch_list = branch = project.branches.list(all=True)
 
         ret_list = list()
         for i in branch_list:
