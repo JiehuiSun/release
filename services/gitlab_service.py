@@ -337,4 +337,5 @@ class GitLab():
             if a:
                 return False, f"打包异常, 自定义脚本执行错误, 错误代码{a}\n"
 
-        return True, ""
+        ret_dir = f"{p_local_path}/dist"
+        return True, ret_dir
