@@ -7,6 +7,7 @@
 
 import json
 import datetime
+from sqlalchemy.dialects.mysql import LONGTEXT
 
 from flask import current_app
 from base import db
@@ -21,6 +22,7 @@ WORK_TYPE = (
     (30, "产品"),
     (40, "测试"),
     (50, "项目经理"),
+    (60, "运维"),
     (90, "其他"),
 )
 
@@ -56,6 +58,7 @@ REQUIREMENT_FLOW_DICT = (
     (602, "测试中"),
     (603, "测试完成"),
     (604, "预发布"),
+    (605, "已封板"),
     (801, "待上线"),
     (802, "上线中"),
     (888, "已上线"),
@@ -74,7 +77,8 @@ REQUIREMENT_FLOW_NEXT_DICT = (
     (601, "提测"),
     (602, "测试中"),
     (603, "测试完成"),
-    (603, "预发布"),
+    (604, "预发布"),
+    (605, "封板"),
     (801, "上线"),
     (802, "上线中"),
     (888, "已上线"),
@@ -85,6 +89,7 @@ REQUIREMENT_FLOW_STATUS = (
     (20, (401, 402, 403)),
     (30, (601, 602, 603, 604)),
     (40, (801, 802, 888)),
+    (50, (605,)),   # 封板
 )
 
 
@@ -115,7 +120,9 @@ JOB_TYPE = (
 
     (51, "Project"),
 
-    (61, "CTO"),
+    (61, "Ops"),
+
+    (91, "Manage"),
 )
 
 
@@ -125,6 +132,7 @@ class GroupModel(db.Model):
     desc = db.Column(db.String(256), nullable=True, comment="简介")
     parent_id = db.Column(db.Integer, default=0, nullable=False, comment="父ID")
     email = db.Column(db.String(64), nullable=False, comment="邮箱")
+    webhook_url = db.Column(db.String(256), nullable=True, comment="钉钉群机器人")
     type_id = db.Column(db.Integer, nullable=True, comment="类型: 10 后端, 20 前端, 90 其他")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
@@ -238,6 +246,7 @@ class ProjectModel(db.Model):
     source_id = db.Column(db.Integer, nullable=True, default=1, comment="来源: 1 gitlab")
     source_project_id = db.Column(db.Integer, nullable=True, comment="来源的项目ID")
     job_id = db.Column(db.Integer, nullable=True, comment="开发语言ID(关联JOB_TYPE)")
+    is_build = db.Column(db.Boolean, default=True, comment="是否需要构建")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_updated = db.Column(db.DateTime, default=time_utils.now_dt, onupdate=time_utils.now_dt)
@@ -302,7 +311,7 @@ class SubmitLogModel(db.Model):
     type_id = db.Column(db.Integer, nullable=True, comment="类型: 10 后端,20 前端, 90 其他")
     group_id = db.Column(db.Integer, nullable=True, comment="组ID")
     count = db.Column(db.Integer, nullable=True, default=1, comment="组ID")
-    log_text = db.Column(db.Text, nullable=True, comment="日志内容(先不分表)")
+    log_text = db.Column(LONGTEXT, nullable=True, comment="日志内容(先不分表)")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_build = db.Column(db.DateTime, default=time_utils.now_dt)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
@@ -346,7 +355,7 @@ class BuildLogModel(db.Model):
     file_path = db.Column(db.String(256), nullable=True, comment="tar包路径")
     type_id = db.Column(db.Integer, nullable=True, comment="类型: 10 后端,20 前端, 90 其他")
     group_id = db.Column(db.Integer, nullable=True, comment="组ID")
-    log_text = db.Column(db.Text, nullable=True, comment="日志内容(先不分表)")
+    log_text = db.Column(LONGTEXT, nullable=True, comment="日志内容(先不分表)")
     commit_text = db.Column(db.Text, nullable=True, comment="Commit信息(先不分表)")
     is_deleted = db.Column(db.Boolean, default=False)
     dt_created = db.Column(db.DateTime, default=time_utils.now_dt)
@@ -405,6 +414,10 @@ class RequirementModel(db.Model):
     web_user_ids = db.Column(db.String(256), nullable=True, comment="前端用户")
     api_user_ids = db.Column(db.String(256), nullable=True, comment="后端用户")
     test_user_ids = db.Column(db.String(256), nullable=True, comment="测试用户")
+    leader_user_ids = db.Column(db.String(256), nullable=True, comment="技术负责人用户")
+    # 前端leader让使用这个字段找组
+    group_ids = db.Column(db.String(256), nullable=True, comment="所有人员的组ID")
+    test_env = db.Column(db.String(12), nullable=True, default="test", comment="提测环境")
 
     # plan
     dt_plan_started = db.Column(db.DateTime, nullable=True, default=time_utils.now_dt, comment="计划启动时间")
@@ -463,6 +476,10 @@ class RequirementModel(db.Model):
                 continue
             ret_dict[k.name] = value
         ret_dict["all_user_id_list"] = all_u_id_list
+
+        for k, v in ret_dict.items():
+            if k.startswith("dt_plan") and v:
+                v = v.split(" ")[0]
 
         return ret_dict
 

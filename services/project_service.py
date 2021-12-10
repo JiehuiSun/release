@@ -21,7 +21,7 @@ class Project():
     def add_project(cls, name, http_url, desc=None, ssh_url=None,
                     group_id=None, type_id=None, script=None,
                     script_type=None, archive_path=None, script_path=None,
-                    source_project_id=None):
+                    source_project_id=None, is_build=True):
         """
         新增项目(正常不对外)
         """
@@ -40,6 +40,7 @@ class Project():
             project_dict["type_id"] = type_id
         if source_project_id:
             project_dict["source_project_id"] = source_project_id
+        project_dict["is_build"] = is_build
 
         project = ProjectModel(**project_dict)
 
@@ -90,7 +91,9 @@ class Project():
             project_obj_list = project_obj_list.filter(ProjectModel.id.in_(id_list))
 
         if user_ids is not None:
-            u_tmp_obj_list = UserGroupModel.query.filter(UserGroupModel.user_id.in_(user_ids.split(",")))
+            u_tmp_obj_list = UserGroupModel.query \
+                .filter(UserGroupModel.user_id.in_(user_ids.split(","))) \
+                .filter_by(is_deleted=False)
             group_id_list = [i.group_id for i in u_tmp_obj_list]
             project_obj_list = project_obj_list.filter(ProjectModel.group_id.in_(group_id_list))
 
@@ -128,7 +131,11 @@ class Project():
             for i in project_list:
                 if not i["source_project_id"]:
                     continue
-                p = GitLab.get_project(i["source_project_id"])
+                try:
+                    p = GitLab.get_project(i["source_project_id"])
+                except Exception as e:
+                    print(f"项目({i['name']}){i['id']}异常, 关联gitlab的project_id是{i['source_project_id']}, Err: {str(e)}")
+                    p = None
                 if p:
                     dt_last_submit = p.last_activity_at
                     dt_last_submit = dt_last_submit.split(".")[0].replace("T", " ")
@@ -140,8 +147,11 @@ class Project():
         return ret
 
     @classmethod
-    def query_project(cls, project_id, need_detail=True):
-        project_obj = ProjectModel.query.get(project_id)
+    def query_project(cls, project_id, need_detail=True, is_local_project=True):
+        if is_local_project:
+            project_obj = ProjectModel.query.get(project_id)
+        else:
+            project_obj = ProjectModel.query.filter_by(source_project_id=project_id).one_or_none()
 
         if not project_obj or project_obj.is_deleted:
             raise ParamsError("Project Not Exist or Use Delete")
@@ -152,7 +162,7 @@ class Project():
             return project_dict
 
         build_script_obj_list = BuildScriptModel.query \
-            .filter_by(project_id=project_id,
+            .filter_by(project_id=project_obj.id,
                        is_deleted=False).all()
         if not build_script_obj_list:
             project_dict["script"] = dict()
@@ -173,7 +183,8 @@ class Project():
     @classmethod
     def update_project(cls, id, name=None, http_url=None, desc=None,
                        ssh_url=None, group_id=None, type_id=None, script=None,
-                       script_type=None, archive_path=None, script_path=None):
+                       script_type=1, archive_path=None, script_path=None,
+                       source_project_id=None, is_build=True):
         """
         更新项目
         """
@@ -194,6 +205,9 @@ class Project():
             project_obj.group_id = group_id
         if type_id:
             project_obj.type_id = type_id
+        if source_project_id:
+            project_obj.source_project_id = source_project_id
+        project_obj.is_build = is_build
 
         if script:
             try:
@@ -205,12 +219,9 @@ class Project():
                     if script_obj:
                         # 已存在的环境配置
                         script_obj.execute_comm = v
-                        if script_type:
-                            script_obj.script_type = script_type
-                        if script_path:
-                            script_obj.script_path = script_path
-                        if archive_path:
-                            script_obj.archive_path = archive_path
+                        script_obj.script_type = script_type
+                        script_obj.script_path = script_path
+                        script_obj.archive_path = archive_path
                     else:
                         # 不存在的环境配置
                         tmp_dict = {

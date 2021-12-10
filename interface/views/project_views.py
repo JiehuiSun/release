@@ -63,6 +63,8 @@ class ProjectView(Api):
             "script_type": "optional int",
             "archive_path": "optional str",
             "script_path": "optional str",
+            "source_project_id": "optional pass",
+            "is_build": "optional pass",
         }
 
         self.ver_params()
@@ -87,6 +89,8 @@ class ProjectView(Api):
             "script_type": "optional int",
             "archive_path": "optional str",
             "script_path": "optional str",
+            "source_project_id": "optional pass",
+            "is_build": "optional pass",
         }
 
         self.ver_params()

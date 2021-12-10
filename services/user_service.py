@@ -48,13 +48,15 @@ class Group():
     @classmethod
     def list_group(cls, type_id=None, keyword=None, parent_id=None,
                    group_id_list: list = [], page_num=1, page_size=999,
-                   user_id_list=None):
+                   user_id_list=None, type_id_list: list = []):
         """
         组列表
         """
         group_obj_list = GroupModel.query.filter_by(is_deleted=False)
         if type_id:
             group_obj_list = group_obj_list.filter_by(type_id=type_id)
+        if type_id_list:
+            group_obj_list = group_obj_list.filter(GroupModel.type_id.in_(type_id_list))
         if keyword:
             # 暂时区分大小写
             group_obj_list = group_obj_list.filter(GroupModel.name.like(f"%{keyword}%"))
@@ -65,7 +67,9 @@ class Group():
             group_obj_list = group_obj_list.filter(GroupModel.id.in_(group_id_list))
 
         if user_id_list is not None:
-            u_tmp_obj_list = UserGroupModel.query.filter(UserGroupModel.user_id.in_(user_id_list))
+            u_tmp_obj_list = UserGroupModel.query \
+                .filter(UserGroupModel.user_id.in_(user_id_list)) \
+                .filter_by(is_deleted=False)
             group_id_list = [i.group_id for i in u_tmp_obj_list]
             if group_id_list:
                 group_obj_list = group_obj_list.filter(GroupModel.id.in_(group_id_list))
@@ -92,6 +96,7 @@ class User():
     def list_user(cls, keyword=None, user_id_list: list = [], group_id=None,
                   type_id=None, page_num=1, page_size=999, need_detail=False):
         user_obj_list = DevUserModel.query.filter_by(is_deleted=False)
+        # user_obj_list = user_obj_list.filter(DevUserModel.id != 9999)
 
         if keyword:
             user_obj_list = user_obj_list.filter(or_(DevUserModel.name.like(f"%{keyword}%"),
@@ -191,8 +196,9 @@ class User():
         if role_id_list:
             user_obj.role_ids = ",".join(str(i) for i in role_id_list)
         if group_id_list:
-            old_group_obj = UserGroupModel.query.filter_by(user_id=id).all()
-            old_group_id_list = [i.group_id for i in old_group_obj]
+            old_group_obj = UserGroupModel.query.filter_by(user_id=id,
+                                                           is_deleted=False).all()
+            old_group_id_list = [str(i.group_id) for i in old_group_obj]
             id_data = query_operate_ids(old_group_id_list, group_id_list)
             if id_data["add_id_list"]:
                 for i in id_data["add_id_list"]:
@@ -204,8 +210,8 @@ class User():
                     db.session.add(g)
             if id_data["del_id_list"]:
                 tmp_o = UserGroupModel.query.filter(
-                    UserGroupModel.user_id.in_(id_data["del_id_list"])
-                )
+                    UserGroupModel.group_id.in_(id_data["del_id_list"])
+                ).filter_by(is_deleted=False)
                 tmp_o.update({"is_deleted": True}, synchronize_session=False)
         if job_id:
             user_obj.job = job_id

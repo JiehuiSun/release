@@ -8,15 +8,16 @@
 import os
 
 from flask import current_app
-from base import db
+from base import db, redis
 from base.errors import ParamsError
 from models.models import BuildLogModel, LOG_STATUS
 from .project_service import Project
-from .user_service import User
+from .user_service import User, Group
 from .gitlab_service import GitLab
 from . import handle_page, gen_version_num
 from utils.time_utils import str2tsp, datetime_2_str_by_format, dt2ts
 from utils import async_func
+from utils import send_ding_errmsg
 
 
 
@@ -103,7 +104,7 @@ class Build():
                 continue
             user_dict_list[i["id"]] = {
                 "id": i["id"],
-                "name": i["name"]
+                "name": i["nickname"] or i["name"]
             }
 
         # 整合数据
@@ -171,8 +172,12 @@ class BuildLog():
 
         log_list = list()
         user_id_list = list()
+        # down
+        h = current_app.config["DOWNLOAD_HOST"]
+        a = "/api/interface/v1/utils/download/"
         for i in log_obj_list:
             log_dict = i.to_dict()
+            log_dict["download_url"] = f"{h}{a}?file={log_dict['file_path']}"
             log_dict["version_num"] = log_dict["title"]
             user_id_list.append(log_dict["creator"])
             log_list.append(log_dict)
@@ -184,7 +189,7 @@ class BuildLog():
                 continue
             user_dict_list[i["id"]] = {
                 "id": i["id"],
-                "name": i["name"]
+                "name": i["nickname"] or i["name"]
             }
 
         for i in log_list:
@@ -195,6 +200,7 @@ class BuildLog():
                     "name": "未知"
                 }
             i["operator"] = user_dict
+            i["operator_name"] = user_dict["name"]
 
             i["duration"] = str2tsp(i["dt_updated"]) - str2tsp(i["dt_created"])
             i["fetch_duration"] = str2tsp(i["dt_updated"]) - str2tsp(i["dt_created"])
@@ -227,7 +233,7 @@ class BuildLog():
             pass
 
         http_url = project_dict["http_url"]
-        name = project_dict["name"]
+        name = project_dict["name"].strip(" ")
 
         name = name.replace(" ", "_")
         log_count = BuildLogModel.query.filter_by(project_id=project_id,
@@ -243,8 +249,32 @@ class BuildLog():
         except Exception as e:
             last_commit = ""
 
+        # 查询项目所属组的webhook
+        group_data = Group.list_group(group_id_list=[project_dict["group_id"]])
+        if group_data["data_list"]:
+            group_webhook = [group_data["data_list"][0]["webhook_url"]]
+        else:
+            group_webhook = []
+
         commit_text = ""
-        new_commit_list = GitLab.list_commit(source_project_id, branch)
+        try:
+            new_commit_list = GitLab.list_commit(source_project_id, branch)
+        except:
+            new_commit_list = list()
+            # 发送错误通知
+            title = "构建警告"
+            msg = list()
+            msg.append("#### 构建警告")
+            msg.append(f"**仓库:** {name}  ")
+            msg.append(f"**分支:** {branch}  ")
+            msg.append(f"**环境:** {env}  ")
+            msg.append(f"**错误信息:** {name}获取commit信息异常\n请检查gitlab项目是否有迁移\n该异常不会影响打包")
+            group_webhook.append(current_app.config["OPSDEV_WEBHOOK"])
+            msg = {
+                "title": title,
+                "text": "\n".join(msg)
+            }
+            send_ding_errmsg(group_webhook, msg, msg_type="markdown")
         for i in new_commit_list:
             if i.id == last_commit:
                 break
@@ -290,19 +320,57 @@ class BuildLog():
                 "job_type": job_type,
                 "env": env
             }
-            cls.async_clone_project(**params_d)
+            # cls.async_clone_project(**params_d)
+            # 为了最快形式转队列, 先从这里切入
+            # TODO 应该在日志记录生成之前或用特殊字段标记是否执行
+            # 判断该项目+分支+环境如果在队列中, 则不再添加构建队列
+            build_tasks_num = redis.client.llen("build_tasks")
+            if build_tasks_num >= 20:
+                # 队列达到20, 日志/提示
+                print(f"目前构建任务队列数: {build_tasks_num}")
+                # 发送错误通知
+                title = "队列警告"
+                msg = list()
+                msg.append("#### 队列警告")
+                msg.append(f"**构建队列告警:** 当前构建队列已达到20个, 请检查队列是否正常或根据情况设置线程/队列数 ")
+                group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
+                msg = {
+                    "title": title,
+                    "text": "\n".join(msg)
+                }
+                send_ding_errmsg(group_webhook_url_list, msg, msg_type="markdown")
+            task_name = f"{build_id}|{name}|{tar_file_name}|{source_project_id}|{branch}|{log_file}|{job_type}|{env}"
+            redis.client.rpush("build_tasks", task_name)
         except Exception as s:
             build_obj = BuildLogModel.query.get(build_id)
             build_obj.status = 3
             db.session.commit()
             with open(log_file, "a") as e:
                 e.write(f">>: Build Error: {str(s)}\n")
+
+            # 发送错误通知
+            title = "构建异常"
+            msg = list()
+            msg.append("#### 构建警告")
+            msg.append(f"**仓库:** {name}   ")
+            msg.append(f"**分支:** {branch}   ")
+            msg.append(f"**环境:** {env}  ")
+            msg.append(f"**错误详情:** {str(s)} ")
+            group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
+            msg = {
+                "title": title,
+                "text": "\n".join(msg)
+            }
+            if len(group_webhook) == 1:
+                group_webhook.append(current_app.config["OPSDEV_WEBHOOK"])
+            send_ding_errmsg(group_webhook, msg, msg_type="markdown")
             raise ParamsError(f"Build Err! Clone Err {str(s)}")
 
         return build_obj.id
 
     @classmethod
-    @async_func
+    # @async_func
+    # 构建队列消费这个方法即可
     def async_clone_project(cls, build_log_id, name, tar_file_name, source_project_id,
                             branch, log_file, job_type, env):
         try:
@@ -312,6 +380,14 @@ class BuildLog():
                 with open(log_file, "a") as e:
                     e.write(f">>: Query Build Info ..\n")
                 build_obj = BuildLogModel.query.get(build_log_id)
+
+                # 查询项目所属组的webhook
+                group_data = Group.list_group(group_id_list=[build_obj.group_id])
+                if group_data["data_list"]:
+                    group_webhook = [group_data["data_list"][0]["webhook_url"]]
+                else:
+                    group_webhook = []
+
                 with open(log_file, "a") as e:
                     e.write(f">>: Clone Project Start..\n")
                 with open(log_file, "a") as e:
@@ -320,6 +396,21 @@ class BuildLog():
                         build_obj.status = 3
                         e.write(tar_file_dict)
                         e.write(f">>: log file name is {log_file}\n\n")
+
+                        # 发送错误通知
+                        title = "制品失败"
+                        msg = list()
+                        msg.append("#### 制品失败")
+                        msg.append(f"**仓库:** {name}   ")
+                        msg.append(f"**分支:** {branch}   ")
+                        msg.append(f"**环境:** {env}   ")
+                        msg.append(f"**错误详情:** {str(tar_file_dict)}")
+                        group_webhook.append(current_app.config["OPSDEV_WEBHOOK"])
+                        msg = {
+                            "title": title,
+                            "text": "\n".join(msg)
+                        }
+                        send_ding_errmsg(group_webhook, msg, msg_type="markdown")
                     else:
                         e.write(f">>: Clone Project End..\n")
                         e.write(f">>: Build Success! \n tar file name is {tar_file_name}\n\n")
@@ -333,13 +424,37 @@ class BuildLog():
                 # query log
                 db.session.commit()
         except Exception as s:
-            build_obj = BuildLogModel.query.get(build_log_id)
-            build_obj.status = 3
-            db.session.commit()
-            with open(log_file, "a") as e:
-                e.write(f">>: Build Error: {str(s)}\n")
-            raise ParamsError(f"Build Err! Clone Err {str(s)}")
+            from base import db
+            from application import app
+            with app.app_context():
+                build_obj = BuildLogModel.query.get(build_log_id)
+                build_obj.status = 3
+                with open(log_file, "a") as e:
+                    e.write(f">>: Build Error: {str(s)}\n")
+                with open(log_file, "r") as e:
+                    build_obj.log_text = e.read()
+                db.session.commit()
+
+                # 发送错误通知
+                title = "制品失败"
+                msg = list()
+                msg.append("#### 制品失败")
+                msg.append(f"**仓库:** {name}  ")
+                msg.append(f"**分支:** {branch}  ")
+                msg.append(f"**环境:** {env}  ")
+                msg.append(f"**错误详情:** {str(s)}  ")
+                group_webhook_url_list = [current_app.config["OPSDEV_WEBHOOK"],]
+                msg = {
+                    "title": title,
+                    "text": "\n".join(msg)
+                }
+                send_ding_errmsg(group_webhook_url_list, msg, msg_type="markdown")
+                raise ParamsError(f"Build Err! Clone Err {str(s)}")
         return
+
+    @classmethod
+    def clone_build_project(cls, *args, **kwargs):
+        cls.async_clone_project(*args)
 
     @classmethod
     def query_log(cls, log_id):
@@ -369,7 +484,7 @@ class BuildLog():
         # user
         try:
             user_dict = User.query_user(log_obj.creator)
-            user_name = user_dict["name"]
+            user_name = user_dict["nickname"] or user_dict["name"]
         except:
             user_name = "未知"
 
@@ -384,7 +499,7 @@ class BuildLog():
         ret["commit_list"] = ret["commit_text"].splitlines()
         ret["version_num"] = ret["title"]
         ret["operator_name"] = user_name
-        ret["download_url"] = f"{h}{a}{p}"
+        ret["download_url"] = f"{h}{a}?file={p}"
 
         ret["duration"] = str2tsp(ret["dt_updated"]) - str2tsp(ret["dt_created"])
         ret["fetch_duration"] = ret["duration"]

@@ -11,8 +11,10 @@ from models.models import (RequirementModel, RequirementProjectModel, Requiremen
                            REQUIREMENT_FLOW_STATUS, REQUIREMENT_FLOW_DICT,
                            REQUIREMENT_FLOW_NEXT_DICT)
 from . import handle_page
-from utils import query_operate_ids
+from utils import query_operate_ids, send_ding_errmsg
 from utils.time_utils import now_dt
+from services.user_service import Group
+from services.build_service import BuildLog
 
 
 class Requirement():
@@ -25,18 +27,23 @@ class Requirement():
                         dt_plan_tested=None, dt_plan_released=None,
                         dt_plan_finished=None, project_user_id_list=None,
                         product_user_id_list=None, web_user_id_list=None,
-                        api_user_id_list=None, test_user_id_list=None):
+                        api_user_id_list=None, test_user_id_list=None,
+                        test_env="test", leader_user_id_list=None):
         """
         新增需求(基本信息)
         """
         requirement_dict = {
             "name": name,
+            "test_env": test_env
         }
 
+        user_id_list = list()
         if desc:
             requirement_dict["desc"] = desc
         if status_code:
             requirement_dict["status_code"] = status_code
+            if status_code == 1:
+                requirement_dict["dt_started"] = now_dt()
         if delayed:
             requirement_dict["delayed"] = delayed
         if dt_plan_started:
@@ -51,19 +58,51 @@ class Requirement():
             requirement_dict["dt_plan_finished"] = dt_plan_finished
         if project_user_id_list:
             requirement_dict["project_user_ids"] = ",".join(str(i) for i in project_user_id_list)
+            user_id_list += project_user_id_list
         if product_user_id_list:
             requirement_dict["product_user_ids"] = ",".join(str(i) for i in product_user_id_list)
+            user_id_list += product_user_id_list
         if web_user_id_list:
             requirement_dict["web_user_ids"] = ",".join(str(i) for i in web_user_id_list)
+            user_id_list += web_user_id_list
         if api_user_id_list:
             requirement_dict["api_user_ids"] = ",".join(str(i) for i in api_user_id_list)
+            user_id_list += api_user_id_list
         if test_user_id_list:
             requirement_dict["test_user_ids"] = ",".join(str(i) for i in test_user_id_list)
+            user_id_list += test_user_id_list
+        if leader_user_id_list:
+            requirement_dict["leader_user_ids"] = ",".join(str(i) for i in leader_user_id_list)
+            user_id_list += leader_user_id_list
 
+        group_data = Group.list_group(user_id_list=user_id_list)
+        group_id_list = [i["id"] for i in group_data["data_list"]]
+        requirement_dict["group_ids"] = ",".join(str(i) for i in group_id_list)
         requirement = RequirementModel(**requirement_dict)
 
         db.session.add(requirement)
         db.session.commit()
+
+        # 直接立项发送消息
+        if status_code == 1:
+            msg = []
+            group_webhook_url_list = []
+            title = ""
+            group_data = Group.list_group(
+                group_id_list=group_id_list,
+                type_id=30)
+            for x in group_data["data_list"]:
+                if x["webhook_url"]:
+                    group_webhook_url_list.append(x["webhook_url"])
+            title = "项目立项"
+            msg.append("#### 恭喜您！已成功立项！")
+            msg.append(f"**项目:** {name}")
+            msg = {
+                "title": title,
+                "text": "\n".join(msg)
+            }
+
+            RequirementStatus.send_msg(requirement.id, group_webhook_url_list, msg)
 
         return
 
@@ -93,13 +132,63 @@ class Requirement():
         requirement_list = list()
         for i in requirement_obj_list:
             r_dict = i.to_dict()
-            requirement_list.append(i.to_dict())
+            # current env
+            if int(status_id) == 30:
+                if r_dict["status_code"] == 604:
+                    r_dict["current_env"] = "pre"
+                else:
+                    r_dict["current_env"] = r_dict["test_env"]
+
+            requirement_list.append(r_dict)
 
         ret = {
             "data_list": requirement_list,
             "count": count
         }
         return ret
+
+    @classmethod
+    def list_auto_build_requirement(cls, project_id, status_id_le,
+                                    status_id_ge, branch):
+        req_project_obj_list = RequirementProjectModel.query \
+            .filter_by(project_id=project_id,
+                       is_deleted=False,
+                       branch=branch).all()
+
+        req_project_dict_list = dict()
+        for i in req_project_obj_list:
+            if i.requirement_id in req_project_dict_list:
+                req_project_dict_list[i.requirement_id].append(i)
+            else:
+                req_project_dict_list[i.requirement_id] = [i]
+
+        if not req_project_dict_list:
+            return
+
+        req_obj_list = RequirementModel.query \
+            .filter(RequirementModel.status_code >= status_id_le,
+                    RequirementModel.status_code <= status_id_ge,
+                    RequirementModel.id.in_(list(req_project_dict_list.keys()))).all()
+
+        if not req_obj_list:
+            return
+
+        ret_list = list()
+        for i in req_obj_list:
+            ret_dict = dict()
+            if i.status_code == 604:
+                ret_dict["env"] = "pre"
+            elif i.status_code - 600 < 10:
+                ret_dict["env"] = i.test_env or "test"
+            else:
+                continue
+
+            for x in req_project_dict_list[i.id]:
+                ret_dict["project_id"] = x.project_id
+                ret_list.append(ret_dict)
+
+        return ret_list
+
 
     @classmethod
     def query_requirement(cls, requirement_id):
@@ -137,7 +226,8 @@ class Requirement():
                            dt_plan_tested=None, dt_plan_released=None,
                            dt_plan_finished=None, project_user_id_list=None,
                            product_user_id_list=None, web_user_id_list=None,
-                           api_user_id_list=None, test_user_id_list=None):
+                           api_user_id_list=None, test_user_id_list=None,
+                           test_env="test", leader_user_id_list=None):
         """
         更新需求(基本信息)
         """
@@ -175,6 +265,22 @@ class Requirement():
             requirement_obj.web_user_ids = ",".join(str(i) for i in web_user_id_list)
         if test_user_id_list is not None:
             requirement_obj.test_user_ids = ",".join(str(i) for i in test_user_id_list)
+        if leader_user_id_list is not None:
+            requirement_obj.leader_user_ids = ",".join(str(i) for i in leader_user_id_list)
+
+        user_id_list = list()
+        user_id_list += project_user_id_list
+        user_id_list += product_user_id_list
+        user_id_list += api_user_id_list
+        user_id_list += web_user_id_list
+        user_id_list += test_user_id_list
+        user_id_list += leader_user_id_list
+
+        group_data = Group.list_group(user_id_list=user_id_list)
+        group_id_list = [i["id"] for i in group_data["data_list"]]
+        requirement_obj.group_ids = ",".join(str(i) for i in group_id_list)
+
+        requirement_obj.test_env = test_env
 
         db.session.commit()
 
@@ -374,6 +480,9 @@ class RequirementStatusFlow():
         elif status_code == 604:
             i["next_status_code"] = 801
             i["next_status_name"] = "申请上线"
+        elif status_code == 605:
+            i["next_status_code"] = 801
+            i["next_status_name"] = "申请上线"
         elif status_code == 801:
             i["next_status_code"] = 888
             i["next_status_name"] = "上线"
@@ -397,19 +506,114 @@ class RequirementStatus():
             requirement_obj.status_code = status_code
 
             # 修改实际时间
+            msg = []
+            group_webhook_url_list = []
+            title = ""
+
+            group_id_list = requirement_obj.group_ids.split(",")
             if status_code == 1:
+                group_data = Group.list_group(
+                    group_id_list=group_id_list,
+                    type_id=30)
+                for x in group_data["data_list"]:
+                    if x["webhook_url"]:
+                        group_webhook_url_list.append(x["webhook_url"])
                 requirement_obj.dt_started = now_dt()
+                title = "项目立项"
+                msg.append("#### 恭喜您！已成功立项！")
+                msg.append(f"**项目:** {requirement_obj.name}")
             elif status_code == 402:
+                group_data = Group.list_group(
+                    group_id_list=group_id_list,
+                    type_id_list=(10, 20))
+                for x in group_data["data_list"]:
+                    if x["webhook_url"]:
+                        group_webhook_url_list.append(x["webhook_url"])
                 requirement_obj.dt_deved = now_dt()
+                title = "来活了"
+                msg.append("#### 来活了")
+                msg.append(f"**项目:** {requirement_obj.name}")
+                msg.append("###### 小伙伴们, 撸起袖子加油干吧!")
             elif status_code == 602:
-                if not RequirementProject.list_project(requirement_id):
-                    raise ParamsError(f"请选择提测仓库")
+                req_project_list = RequirementProject.list_project(requirement_id)
+                if not req_project_list:
+                    raise ParamsError(f"请配置提测仓库")
                 requirement_obj.dt_tested = now_dt()
+                title = "申请提测"
+                msg.append("#### 申请提测")
+                msg.append(f"**项目:** {requirement_obj.name}")
+                msg.append("\n**环境:** test")
+                group_data = Group.list_group(
+                    group_id_list=group_id_list,
+                    type_id=40)
+                for x in group_data["data_list"]:
+                    if x["webhook_url"]:
+                        group_webhook_url_list.append(x["webhook_url"])
+
+                # 自动构建
+                for i in req_project_list:
+                    project_id = i["project_id"]
+                    branch = i["branch"]
+                # 构建
+                BuildLog.add_build_log(project_id, branch, requirement_obj.test_env, user_id=9999)
+            elif status_code == 604:
+                requirement_obj.dt_released = now_dt()
+                title = "进入pre环境"
+                msg.append("#### 进入pre环境")
+                msg.append(f"**项目:** {requirement_obj.name}")
+                group_data = Group.list_group(
+                    group_id_list=group_id_list,
+                    type_id_list=(10, 20))
+                for x in group_data["data_list"]:
+                    if x["webhook_url"]:
+                        group_webhook_url_list.append(x["webhook_url"])
+
+                # 自动构建
+                req_project_list = RequirementProject.list_project(requirement_id)
+                for i in req_project_list:
+                    project_id = i["project_id"]
+                    branch = i["branch"]
+                # 构建
+                BuildLog.add_build_log(project_id, branch, "pre", user_id=9999)
+            elif status_code == 605:
+                requirement_obj.dt_released = now_dt()
+                title = "已封板"
+                msg.append("#### 已封板")
+                msg.append(f"**项目:** {requirement_obj.name}")
+                group_data = Group.list_group(
+                    group_id_list=group_id_list)
+                for x in group_data["data_list"]:
+                    if x["webhook_url"]:
+                        group_webhook_url_list.append(x["webhook_url"])
             elif status_code == 801:
                 requirement_obj.dt_finished = now_dt()
+                title = "上线申请"
+                msg.append("#### 上线申请")
+                msg.append(f"**项目:** {requirement_obj.name}")
+                group_data = Group.list_group(
+                    group_id_list=group_id_list,
+                    type_id_list=(10, 20))
+                for x in group_data["data_list"]:
+                    if x["webhook_url"]:
+                        group_webhook_url_list.append(x["webhook_url"])
+                # 运维
+                ops_group = Group.list_group(type_id=60)
+                for x in ops_group["data_list"]:
+                    group_webhook_url_list.append(x["webhook_url"])
 
             db.session.commit()
         except Exception as e:
             raise ParamsError(f"更新状态错误! {str(e)}")
 
+        msg = {
+            "title": title,
+            "text": "\n".join(msg)
+        }
+        group_webhook_url_list = list(set(group_webhook_url_list))
+        cls.send_msg(requirement_obj.id, group_webhook_url_list, msg)
+        return
+
+    @classmethod
+    def send_msg(cls, requirement_id, group_webhook_url_list, msg):
+        send_ding_errmsg(group_webhook_url_list, msg, msg_type="markdown")
         return

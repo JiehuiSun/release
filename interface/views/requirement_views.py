@@ -91,6 +91,8 @@ class RequirementViews(Api):
             "web_user_id_list": "optional list",
             "api_user_id_list": "optional list",
             "test_user_id_list": "optional list",
+            "leader_user_id_list": "optional list",
+            "test_env": "optional str"
         }
 
         self.ver_params()
@@ -130,6 +132,8 @@ class RequirementViews(Api):
             "web_user_id_list": "optional list",
             "api_user_id_list": "optional list",
             "test_user_id_list": "optional list",
+            "leader_user_id_list": "optional list",
+            "test_env": "optional str"
         }
 
         self.ver_params()

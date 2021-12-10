@@ -15,6 +15,7 @@ class DownLoadView(Api):
     """
     下载
     """
+    NEED_LOGIN = False
     def list(self):
         self.params_dict = {
             "file": "required str",

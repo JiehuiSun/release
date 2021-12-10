@@ -1,8 +1,12 @@
 import os
 import logging
+import time
+import datetime
 from flask import Flask
 from werkzeug.routing import BaseConverter
 from flask_cors import CORS
+from flask import request
+from flask import jsonify
 
 from base import configs
 from base import db
@@ -12,6 +16,7 @@ from base import mail
 from base import apscheduler
 from base import tasks
 from base import ldap_manager
+# from base import tasks_queue
 from account.helpers import algorithm_auth_login
 
 
@@ -103,8 +108,71 @@ def config_apscheduler(app):
     apscheduler.init_app(app)
     apscheduler.start()
 
+
 def config_ldap(app):
     ldap_manager.init_app(app)
 
+
 app = create_app()
 tasks.InitTasks()
+
+
+@app.route("/utils/upload_file/", endpoint="/utils/upload_file/", methods=['POST'])
+def upload_file():
+    if request.method == 'POST':
+        appid = request.headers.get("Appid")
+        if not appid or appid not in app.config["ALLOW_APPID"]:
+            res = {
+                "errmsg": "非法请求",
+                "errcode": 10000
+            }
+            return jsonify(res)
+
+        f = request.files['file']
+        new_file_name = "{0}_{1}{2}{3}".format(
+            f.filename.split(".")[0],
+            str(datetime.datetime.now()).split()[0].replace("-", ""),
+            str(int(time.time()))[5:],
+            f.filename.replace(f.filename.split(".")[0], "")
+        )
+
+        dir = request.form.get("dir")
+        if dir not in app.config["ALLOW_FILE_DIR"]:
+            res = {
+                "errmsg": "目录未授权",
+                "errcode": 10000
+            }
+            return jsonify(res)
+
+        data_dir = f"{app.config['REPOSITORY_DIR']}/data"
+        if not os.path.exists(data_dir):
+            os.system(f"mkdir {data_dir}")
+        file_dir = f"{data_dir}/{dir}"
+        if not os.path.exists(file_dir):
+            for i in dir.split("/"):
+                if not os.path.exists(f"{data_dir}/{i}"):
+                    os.system(f"mkdir {data_dir}/{i}")
+                data_dir += f"/{i}"
+
+        f.save(os.path.join(file_dir, new_file_name))
+
+        file_path = f"data/{dir}/{new_file_name}"
+        res = {
+            "errmsg": "上传成功",
+            "errcode": 0,
+            "data": {
+                "file_path": file_path,
+                "download_url": "{0}{1}?file={2}".format(
+                    app.config["DOWNLOAD_HOST"],
+                    "/api/interface/v1/utils/download/",
+                    file_path
+                )
+            }
+        }
+        return jsonify(res)
+    else:
+        res = {
+            "errmsg": "非法请求",
+            "errcode": 10000
+        }
+        return jsonify(res)
